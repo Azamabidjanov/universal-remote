@@ -1,53 +1,60 @@
-/**
-  Generated Main Source File
-
-  Company:
-    Microchip Technology Inc.
-
-  File Name:
-    main.c
-
-  Summary:
-    This is the main file generated using PIC10 / PIC12 / PIC16 / PIC18 MCUs
-
-  Description:
-    This header file provides implementations for driver APIs for all modules selected in the GUI.
-    Generation Information :
-        Product Revision  :  PIC10 / PIC12 / PIC16 / PIC18 MCUs - 1.77
-        Device            :  PIC18F26K22
-        Driver Version    :  2.00
-*/
-
-/*
-    (c) 2018 Microchip Technology Inc. and its subsidiaries. 
-    
-    Subject to your compliance with these terms, you may use Microchip software and any 
-    derivatives exclusively with Microchip products. It is your responsibility to comply with third party 
-    license terms applicable to your use of third party software (including open source software) that 
-    may accompany Microchip software.
-    
-    THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS". NO WARRANTIES, WHETHER 
-    EXPRESS, IMPLIED OR STATUTORY, APPLY TO THIS SOFTWARE, INCLUDING ANY 
-    IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY, AND FITNESS 
-    FOR A PARTICULAR PURPOSE.
-    
-    IN NO EVENT WILL MICROCHIP BE LIABLE FOR ANY INDIRECT, SPECIAL, PUNITIVE, 
-    INCIDENTAL OR CONSEQUENTIAL LOSS, DAMAGE, COST OR EXPENSE OF ANY KIND 
-    WHATSOEVER RELATED TO THE SOFTWARE, HOWEVER CAUSED, EVEN IF MICROCHIP 
-    HAS BEEN ADVISED OF THE POSSIBILITY OR THE DAMAGES ARE FORESEEABLE. TO 
-    THE FULLEST EXTENT ALLOWED BY LAW, MICROCHIP'S TOTAL LIABILITY ON ALL 
-    CLAIMS IN ANY WAY RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT 
-    OF FEES, IF ANY, THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS 
-    SOFTWARE.
-*/
+//--------------------------------------------------------------------
+// Name:            Azam Abidjanov & Connor Stutsman-Plunkett
+// Date:            Fall  2019
+// Purp:            Final Project
+//
+// Assisted:        The entire class of EENG 383
+// Assisted by:     Microchips 18F26K22 Tech Docs 
+//-
+//- Academic Integrity Statement: I certify that, while others may have
+//- assisted me in brain storming, debugging and validating this program,
+//- the program itself is my own work. I understand that submitting code
+//- which is the work of other individuals is a violation of the course
+//- Academic Integrity Policy and may result in a zero credit for the
+//- assignment, or course failure and a report to the Academic Dishonesty
+//- Board. I also understand that if I knowingly give my original work to
+//- another individual that it could also result in a zero credit for the
+//- assignment, or course failure and a report to the Academic Dishonesty
+//- Board.
+//------------------------------------------------------------------------
 
 #include "mcc_generated_files/mcc.h"
 
-/*
-                         Main application
- */
+//Definitions
+
+#define BLOCK_SIZE      512
+
+
+//Global Variables
+uint16_t IR_SIGNAL_BUFFER[BLOCK_SIZE/2]; //Composition: length, first high pulse duration, first low pulse duration, second high pulse duration...
+
+
+//Functions
+uint16_t pulse_Duration_In_Micro_Seconds(uint16_t pulse_Start, uint16_t pulse_End);
+
+//Flags
+uint8_t TRANSMIT_SIGNAL = 0;
+
+//ISR Declarations
+void ECCP1_Rising_Edge_Detected(void);
+void ECCP3_Falling_Edge_Detected(void);
+void TMR1_ISR(void);
+
+//----------------------------------------------
+// Main "function"
+//----------------------------------------------
 void main(void)
 {
+    //Variables
+    
+    // Set timer one to run for one full cycle. MUST BE DONE
+    // BEFORE enabling interrupts, otherwise that while loop becomes an
+    // infinite loop.  Doing this to give EUSART1's baud rate generator time
+    // to stabelize - this will make the splash screen looks better
+    //TMR1_WriteTimer(0x0000);
+    //PIR1bits.TMR1IF= 0; 
+    //while(PIR1bits.TMR1IF == 0);
+    
     // Initialize the device
     SYSTEM_Initialize();
 
@@ -56,22 +63,68 @@ void main(void)
     // Use the following macros to:
 
     // Enable the Global Interrupts
-    //INTERRUPT_GlobalInterruptEnable();
+    INTERRUPT_GlobalInterruptEnable();
 
-    // Disable the Global Interrupts
-    //INTERRUPT_GlobalInterruptDisable();
-
+   
     // Enable the Peripheral Interrupts
-    //INTERRUPT_PeripheralInterruptEnable();
+    INTERRUPT_PeripheralInterruptEnable();
 
-    // Disable the Peripheral Interrupts
-    //INTERRUPT_PeripheralInterruptDisable();
+    //TODO: Set 
 
-    while (1)
+    while(true)
     {
         // Add your application code
     }
 }
+
+//----------------------------------------------
+// Function to find the length of an IR pulse.
+// Finds the difference in timer one counts.
+// 1 timer one count = 500ns.
+// Multiplies by to achieve answer.
+//----------------------------------------------
+uint16_t pulse_Duration_In_Micro_Seconds(uint16_t pulse_Start, uint16_t pulse_End)
+{
+    uint16_t result = pulse_End - pulse_Start;
+    result = result >> 1;
+    return result;
+}
+
+//----------------------------------------------
+// ECCP1 ISR
+// Records timer 1 count when a rising edge is 
+// detected on the input pin RC2
+// Note: RC2 will need to be jumpered to RC4
+//----------------------------------------------
+void ECCP1_Rising_Edge_Detected()
+{
+    //TODO: Record timer one value at the point of the rising edge, store in a global variable.
+    PIR1bits.CCP1IF = 0; //Clear interrupt flag, see technical docs page 176.
+}
+
+//----------------------------------------------
+// ECCP3 ISR
+// Records timer 1 count when a falling edge is 
+// detected on the input pin RC2
+// Note: RB5 will need to be jumpered to RC4
+//----------------------------------------------
+void ECCP3_Falling_Edge_Detected()
+{
+    //TODO: Record timer one value at the point of the falling edge, store in a global variable..
+    
+    PIR4bits.CCP3IF = 0; //Clear interrupt flag, see technical docs page 176. 
+}
+
+//----------------------------------------------
+// Timer 1 ISR
+// Primarily used for transmitting IR codes.
+//----------------------------------------------
+void TMR1_ISR()
+{
+    PIR1bits.TMR1IF= 0; 
+}
+
+
 /**
  End of File
 */

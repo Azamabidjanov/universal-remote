@@ -47,6 +47,7 @@
 */
 
 #include "interrupt_manager.h"
+#include "eccp3.h"
 #include "mcc.h"
 
 void  INTERRUPT_Initialize (void)

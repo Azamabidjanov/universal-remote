@@ -1,24 +1,24 @@
 /**
-  @Generated PIC10 / PIC12 / PIC16 / PIC18 MCUs Source File
+  ECCP3 Generated Driver File
 
-  @Company:
+  @Company
     Microchip Technology Inc.
 
-  @File Name:
-    mcc.c
+  @File Name
+    eccp3.c
 
-  @Summary:
-    This is the mcc.c file generated using PIC10 / PIC12 / PIC16 / PIC18 MCUs
+  @Summary
+    This is the generated driver implementation file for the ECCP3 driver using PIC10 / PIC12 / PIC16 / PIC18 MCUs
 
-  @Description:
-    This header file provides implementations for driver APIs for all modules selected in the GUI.
+  @Description
+    This source file provides implementations for driver APIs for ECCP3.
     Generation Information :
         Product Revision  :  PIC10 / PIC12 / PIC16 / PIC18 MCUs - 1.77
         Device            :  PIC18F26K22
-        Driver Version    :  2.00
+        Driver Version    :  2.02
     The generated drivers are tested against the following:
-        Compiler          :  XC8 2.05 and above or later
-        MPLAB             :  MPLAB X 5.20
+        Compiler          :  XC8 2.05 and above
+         MPLAB 	          :  MPLAB X 5.20
 */
 
 /*
@@ -44,38 +44,59 @@
     SOFTWARE.
 */
 
-#include "mcc.h"
+/**
+  Section: Included Files
+*/
 
+#include <xc.h>
+#include "eccp3.h"
 
-void SYSTEM_Initialize(void)
+/**
+  Section: Capture Module APIs:
+*/
+
+void ECCP3_Initialize(void)
 {
+    // Set the ECCP3 to the options selected in the User Interface
+	
+	// CCP3M Every falling edge; DC3B 1; P3M single; 
+	CCP3CON = 0x14;    
+	
+	// CCPR3H 0; 
+	CCPR3H = 0x00;    
+	
+	// CCPR3L 0; 
+	CCPR3L = 0x00;    
+    
+    // Clear the ECCP3 interrupt flag
+    PIR4bits.CCP3IF = 0;
 
-    INTERRUPT_Initialize();
-    PIN_MANAGER_Initialize();
-    OSCILLATOR_Initialize();
-    ECCP1_Initialize();
-    EPWM2_Initialize();
-    ECCP3_Initialize();
-    TMR2_Initialize();
-    TMR1_Initialize();
-    EUSART1_Initialize();
+    // Enable the ECCP3 interrupt
+    PIE4bits.CCP3IE = 1;
+	
+	// Selecting Timer1
+	CCPTMRS0bits.C3TSEL = 0x0;
 }
 
-void OSCILLATOR_Initialize(void)
+void ECCP3_CaptureISR(void)
 {
-    // SCS FOSC; IRCF 16MHz_HFINTOSC; IDLEN disabled; 
-    OSCCON = 0x70;
-    // PRISD enabled; SOSCGO disabled; MFIOSEL disabled; 
-    OSCCON2 = 0x04;
-    // INTSRC disabled; PLLEN enabled; TUN 0; 
-    OSCTUNE = 0x40;
-    // Wait for PLL to stabilize
-    while(PLLRDY == 0)
-    {
-    }
+    CCP3_PERIOD_REG_T module;
+
+    // Clear the ECCP3 interrupt flag
+    PIR4bits.CCP3IF = 0;
+    
+    // Copy captured value.
+    module.ccpr3l = CCPR3L;
+    module.ccpr3h = CCPR3H;
+    
+    // Return 16bit captured value
+    ECCP3_CallBack(module.ccpr3_16Bit);
 }
 
-
+void ECCP3_CallBack(uint16_t capturedValue)
+{
+    // Add your code here
+}
 /**
  End of File
 */

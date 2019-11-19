@@ -1,24 +1,24 @@
 /**
-  @Generated PIC10 / PIC12 / PIC16 / PIC18 MCUs Source File
+  EPWM2 Generated Driver File
 
-  @Company:
+  @Company
     Microchip Technology Inc.
 
-  @File Name:
-    mcc.c
+  @File Name
+    epwm2.c
 
-  @Summary:
-    This is the mcc.c file generated using PIC10 / PIC12 / PIC16 / PIC18 MCUs
+  @Summary
+    This is the generated driver implementation file for the EPWM2 driver using PIC10 / PIC12 / PIC16 / PIC18 MCUs
 
-  @Description:
-    This header file provides implementations for driver APIs for all modules selected in the GUI.
+  @Description
+    This source file provides implementations for driver APIs for EPWM2.
     Generation Information :
         Product Revision  :  PIC10 / PIC12 / PIC16 / PIC18 MCUs - 1.77
         Device            :  PIC18F26K22
-        Driver Version    :  2.00
+        Driver Version    :  2.01
     The generated drivers are tested against the following:
-        Compiler          :  XC8 2.05 and above or later
-        MPLAB             :  MPLAB X 5.20
+        Compiler          :  XC8 2.05 and above
+         MPLAB 	          :  MPLAB X 5.20
 */
 
 /*
@@ -44,38 +44,58 @@
     SOFTWARE.
 */
 
-#include "mcc.h"
+/**
+  Section: Included Files
+*/
 
+#include <xc.h>
+#include "epwm2.h"
 
-void SYSTEM_Initialize(void)
+/**
+  Section: Macro Declarations
+*/
+
+#define PWM2_INITIALIZE_DUTY_VALUE    209
+
+/**
+  Section: EPWM Module APIs
+*/
+
+void EPWM2_Initialize(void)
 {
+    // Set the EPWM2 to the options selected in the User Interface
+	
+	// CCP2M P2A,P2C: active high; P2B,P2D: active high; DC2B 1; P2M0 single; 
+	CCP2CON = 0x1C;    
+	
+	// CCP2ASE operating; PSS2BD low; PSS2AC low; CCP2AS disabled; 
+	ECCP2AS = 0x00;    
+	
+	// P2RSEN automatic_restart; P2DC 0; 
+	PWM2CON = 0x80;    
+	
+	// STR2D P2D_to_port; STR2C P2C_to_port; STR2B P2B_to_port; STR2A P2A_to_CCP2M; STR2SYNC start_at_begin; 
+	PSTR2CON = 0x01;    
+	
+	// CCPR2H 0; 
+	CCPR2H = 0x00;    
+	
+	// CCPR2L 52; 
+	CCPR2L = 0x34;    
 
-    INTERRUPT_Initialize();
-    PIN_MANAGER_Initialize();
-    OSCILLATOR_Initialize();
-    ECCP1_Initialize();
-    EPWM2_Initialize();
-    ECCP3_Initialize();
-    TMR2_Initialize();
-    TMR1_Initialize();
-    EUSART1_Initialize();
+	// Selecting Timer2
+	CCPTMRS0bits.C2TSEL = 0x0;
 }
 
-void OSCILLATOR_Initialize(void)
+void EPWM2_LoadDutyValue(uint16_t dutyValue)
 {
-    // SCS FOSC; IRCF 16MHz_HFINTOSC; IDLEN disabled; 
-    OSCCON = 0x70;
-    // PRISD enabled; SOSCGO disabled; MFIOSEL disabled; 
-    OSCCON2 = 0x04;
-    // INTSRC disabled; PLLEN enabled; TUN 0; 
-    OSCTUNE = 0x40;
-    // Wait for PLL to stabilize
-    while(PLLRDY == 0)
-    {
-    }
+   // Writing to 8 MSBs of pwm duty cycle in CCPRL register
+    CCPR2L = ((dutyValue & 0x03FC)>>2);
+    
+   // Writing to 2 LSBs of pwm duty cycle in CCPCON register
+    CCP2CON = ((uint8_t)(CCP2CON & 0xCF) | ((dutyValue & 0x0003)<<4));
 }
-
-
 /**
  End of File
 */
+

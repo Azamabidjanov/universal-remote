@@ -1,24 +1,24 @@
 /**
-  @Generated PIC10 / PIC12 / PIC16 / PIC18 MCUs Source File
+  ECCP1 Generated Driver File
 
-  @Company:
+  @Company
     Microchip Technology Inc.
 
-  @File Name:
-    mcc.c
+  @File Name
+    eccp1.c
 
-  @Summary:
-    This is the mcc.c file generated using PIC10 / PIC12 / PIC16 / PIC18 MCUs
+  @Summary
+    This is the generated driver implementation file for the ECCP1 driver using PIC10 / PIC12 / PIC16 / PIC18 MCUs
 
-  @Description:
-    This header file provides implementations for driver APIs for all modules selected in the GUI.
+  @Description
+    This source file provides implementations for driver APIs for ECCP1.
     Generation Information :
         Product Revision  :  PIC10 / PIC12 / PIC16 / PIC18 MCUs - 1.77
         Device            :  PIC18F26K22
-        Driver Version    :  2.00
+        Driver Version    :  2.02
     The generated drivers are tested against the following:
-        Compiler          :  XC8 2.05 and above or later
-        MPLAB             :  MPLAB X 5.20
+        Compiler          :  XC8 2.05 and above
+         MPLAB 	          :  MPLAB X 5.20
 */
 
 /*
@@ -44,38 +44,59 @@
     SOFTWARE.
 */
 
-#include "mcc.h"
+/**
+  Section: Included Files
+*/
 
+#include <xc.h>
+#include "eccp1.h"
 
-void SYSTEM_Initialize(void)
+/**
+  Section: Capture Module APIs:
+*/
+
+void ECCP1_Initialize(void)
 {
+    // Set the ECCP1 to the options selected in the User Interface
+	
+	// CCP1M Every rising edge; DC1B 0; P1M single; 
+	CCP1CON = 0x05;    
+	
+	// CCPR1H 0; 
+	CCPR1H = 0x00;    
+	
+	// CCPR1L 0; 
+	CCPR1L = 0x00;    
+    
+    // Clear the ECCP1 interrupt flag
+    PIR1bits.CCP1IF = 0;
 
-    INTERRUPT_Initialize();
-    PIN_MANAGER_Initialize();
-    OSCILLATOR_Initialize();
-    ECCP1_Initialize();
-    EPWM2_Initialize();
-    ECCP3_Initialize();
-    TMR2_Initialize();
-    TMR1_Initialize();
-    EUSART1_Initialize();
+    // Enable the ECCP1 interrupt
+    PIE1bits.CCP1IE = 1;
+	
+	// Selecting CCPTMRS0
+	CCPTMRS0bits.C1TSEL = 0x0;
 }
 
-void OSCILLATOR_Initialize(void)
+void ECCP1_CaptureISR(void)
 {
-    // SCS FOSC; IRCF 16MHz_HFINTOSC; IDLEN disabled; 
-    OSCCON = 0x70;
-    // PRISD enabled; SOSCGO disabled; MFIOSEL disabled; 
-    OSCCON2 = 0x04;
-    // INTSRC disabled; PLLEN enabled; TUN 0; 
-    OSCTUNE = 0x40;
-    // Wait for PLL to stabilize
-    while(PLLRDY == 0)
-    {
-    }
+    CCP1_PERIOD_REG_T module;
+
+    // Clear the ECCP1 interrupt flag
+    PIR1bits.CCP1IF = 0;
+    
+    // Copy captured value.
+    module.ccpr1l = CCPR1L;
+    module.ccpr1h = CCPR1H;
+    
+    // Return 16bit captured value
+    ECCP1_CallBack(module.ccpr1_16Bit);
 }
 
-
+void ECCP1_CallBack(uint16_t capturedValue)
+{
+    // Add your code here
+}
 /**
  End of File
 */

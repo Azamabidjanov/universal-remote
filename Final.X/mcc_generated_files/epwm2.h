@@ -1,26 +1,24 @@
 /**
-  Generated Pin Manager File
+  EPWM2 Generated Driver File
 
-  Company:
+  @Company
     Microchip Technology Inc.
 
-  File Name:
-    pin_manager.c
+  @File Name
+    epwm2.h
 
-  Summary:
-    This is the Pin Manager file generated using PIC10 / PIC12 / PIC16 / PIC18 MCUs
+  @Summary
+    This is the generated driver implementation file for the EPWM2 driver using PIC10 / PIC12 / PIC16 / PIC18 MCUs
 
-  Description:
-    This header file provides implementations for pin APIs for all pins selected in the GUI.
+  @Description
+    This header file provides implementations for driver APIs for EPWM2.
     Generation Information :
         Product Revision  :  PIC10 / PIC12 / PIC16 / PIC18 MCUs - 1.77
         Device            :  PIC18F26K22
-        Driver Version    :  2.11
+        Driver Version    :  2.01
     The generated drivers are tested against the following:
         Compiler          :  XC8 2.05 and above
         MPLAB             :  MPLAB X 5.20
-
-    Copyright (c) 2013 - 2015 released Microchip Technology Inc.  All rights reserved.
 */
 
 /*
@@ -46,56 +44,90 @@
     SOFTWARE.
 */
 
-#include "pin_manager.h"
+#ifndef EPWM2_H
+#define EPWM2_H
 
+/**
+  Section: Included Files
+*/
 
+#include <xc.h>
+#include <stdint.h>
 
+#ifdef __cplusplus  // Provide C++ Compatibility
 
+    extern "C" {
 
-void PIN_MANAGER_Initialize(void)
-{
-    /**
-    LATx registers
-    */
-    LATA = 0x00;
-    LATB = 0x00;
-    LATC = 0x00;
+#endif
 
-    /**
-    TRISx registers
-    */
-    TRISA = 0xFF;
-    TRISB = 0xFF;
-    TRISC = 0xBD;
+/**
+  Section: EPWM Module APIs
+*/
 
-    /**
-    ANSELx registers
-    */
-    ANSELC = 0x38;
-    ANSELB = 0x1F;
-    ANSELA = 0x2F;
+/**
+  @Summary
+    Initializes the EPWM2
 
-    /**
-    WPUx registers
-    */
-    WPUB = 0x00;
-    INTCON2bits.nRBPU = 1;
+  @Description
+    This routine initializes the EPWM2 module.
+    This routine must be called before any other EPWM2 routine is called.
+    This routine should only be called once during system initialization.
 
+  @Preconditions
+    None
 
+  @Param
+    None
 
+  @Returns
+    None
 
-
-
-   
+  @Comment
     
-}
-  
-void PIN_MANAGER_IOC(void)
-{   
-	// Clear global Interrupt-On-Change flag
-    INTCONbits.RBIF = 0;
-}
 
+ @Example
+    <code>
+    uint16_t dutycycle;
+
+    ECCP2_Initialize();
+	EPWM2_LoadDutyValue(dutycycle);
+    </code>
+ */
+void EPWM2_Initialize(void);
+
+/**
+  @Summary
+    Loads 16-bit duty cycle.
+
+  @Description
+    This routine loads the 16 bit duty cycle value.
+
+  @Preconditions
+    EPWM2_Initialize() function should have been called before calling this function.
+
+  @Param
+    Pass 16bit duty cycle value.
+
+  @Returns
+    None
+
+  @Example
+    <code>
+    uint16_t dutycycle;
+
+    EPWM2_Initialize();
+    EPWM2_LoadDutyValue(dutycycle);
+    </code>
+*/
+void EPWM2_LoadDutyValue(uint16_t dutyValue);
+        
+#ifdef __cplusplus  // Provide C++ Compatibility
+
+    }
+
+#endif
+
+#endif	//EPWM2_H
 /**
  End of File
 */

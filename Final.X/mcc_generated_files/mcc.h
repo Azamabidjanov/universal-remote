@@ -51,13 +51,6 @@
 #include "pin_manager.h"
 #include <stdint.h>
 #include <stdbool.h>
-#include "interrupt_manager.h"
-#include "epwm2.h"
-#include "eccp3.h"
-#include "eccp1.h"
-#include "tmr1.h"
-#include "tmr2.h"
-#include "eusart1.h"
 
 
 

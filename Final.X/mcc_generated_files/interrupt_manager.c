@@ -47,6 +47,8 @@
 */
 
 #include "interrupt_manager.h"
+#include "tmr1.h"
+#include "eccp1.h"
 #include "eccp3.h"
 #include "mcc.h"
 

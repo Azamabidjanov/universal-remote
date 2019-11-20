@@ -20,7 +20,11 @@
 
 #include "mcc_generated_files/mcc.h"
 
+
 //Definitions
+#define INTERRUPT_GlobalInterruptEnable() (INTCONbits.GIE = 1)          //Do not touch these, for some reason dispite them being in interrupt_manager.h the compiler
+#define INTERRUPT_PeripheralInterruptEnable() (INTCONbits.PEIE = 1)     //refuses to run without them. Also tried including interrupt_manager.h, didn't work.
+
 
 #define BLOCK_SIZE      512
 
@@ -38,7 +42,7 @@ uint8_t TRANSMIT_SIGNAL = 0;
 //ISR Declarations
 void ECCP1_Rising_Edge_Detected(void);
 void ECCP3_Falling_Edge_Detected(void);
-void TMR1_ISR(void);
+void my_TMR1_ISR(void);
 
 //----------------------------------------------
 // Main "function"
@@ -119,7 +123,7 @@ void ECCP3_Falling_Edge_Detected()
 // Timer 1 ISR
 // Primarily used for transmitting IR codes.
 //----------------------------------------------
-void TMR1_ISR()
+void my_TMR1_ISR()
 {
     PIR1bits.TMR1IF= 0; 
 }

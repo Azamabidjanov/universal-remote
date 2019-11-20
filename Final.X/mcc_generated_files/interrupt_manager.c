@@ -47,9 +47,6 @@
 */
 
 #include "interrupt_manager.h"
-#include "tmr1.h"
-#include "eccp1.h"
-#include "eccp3.h"
 #include "mcc.h"
 
 void  INTERRUPT_Initialize (void)
@@ -61,7 +58,11 @@ void  INTERRUPT_Initialize (void)
 void __interrupt() INTERRUPT_InterruptManager (void)
 {
     // interrupt handler
-    if(INTCONbits.PEIE == 1)
+    if(INTCONbits.TMR0IE == 1 && INTCONbits.TMR0IF == 1)
+    {
+        TMR0_ISR();
+    }
+    else if(INTCONbits.PEIE == 1)
     {
         if(PIE4bits.CCP3IE == 1 && PIR4bits.CCP3IF == 1)
         {

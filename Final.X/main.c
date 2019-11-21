@@ -22,20 +22,40 @@
 
 
 //Definitions
-
-
+#define STOP_BIT        0x0000
+#define PAUSE_BIT       0xFFFF
 #define BLOCK_SIZE      512
-
+#define LED_ON          25 
+#define LED_OFF         0
+#define LENGTH          0
+#define BUTTON_ROWS     4
+#define BUTTON_COLUMNS  3
+#define TMR0_1_MS       1600
 
 //Global Variables
 uint16_t IR_SIGNAL_BUFFER[BLOCK_SIZE/2]; //Composition: length, first high pulse duration, first low pulse duration, second high pulse duration...
 uint16_t PULSE_RISING = 0;
 uint16_t PULSE_FALLING = 0;
-
+char PRESSED_BUTTONS[BUTTON_ROWS][BUTTON_COLUMNS] = 
+{
+    {'\0', '\0', '\0'}, 
+    {'\0', '\0', '\0'}, 
+    {'\0', '\0', '\0'}, 
+    {'\0', '\0', '\0'}
+}; 
+const char TEST_BUTTONS[BUTTON_ROWS][BUTTON_COLUMNS] = 
+{
+    {'1', '2', '3'}, 
+    {'4', '5', '6'}, 
+    {'7', '8', '9'}, 
+    {'*', '0', '#'}
+}; 
 
 //Functions
 uint16_t pulse_Duration_In_Micro_Seconds(uint16_t pulse_Start, uint16_t pulse_End);
+uint16_t micro_Seconds_to_TMR1_Counts(uint16_t input);
 uint8_t input_Signal_Complete();
+void poll_Keypad();
 
 //Flags
 uint8_t TRANSMIT_SIGNAL = 0;
@@ -61,21 +81,33 @@ void main(void)
     // Set timer one to run for one full cycle. MUST BE DONE
     // BEFORE enabling interrupts, otherwise that while loop becomes an
     // infinite loop.  Doing this to give EUSART1's baud rate generator time
-    // to stabelize - this will make the splash screen looks better
-    TMR1_WriteTimer(0x0000);
-    PIR1bits.TMR1IF= 0; 
-    while(PIR1bits.TMR1IF == 0);
+    // to stabilize - this will make the splash screen looks better
+    //TMR1_WriteTimer(0x0000);
+    //PIR1bits.TMR1IF= 0; 
+    //while(PIR1bits.TMR1IF == 0);
+    //This is broken.
     
     // Initialize the device
-    SYSTEM_Initialize();
-
+    //SYSTEM_Initialize();
+    
+    //Set custom ISRs
+    //TODO: Find a way to set custom ISRs
+    
     // Enable the Global Interrupts
     INTERRUPT_GlobalInterruptEnable();
 
     // Enable the Peripheral Interrupts
     INTERRUPT_PeripheralInterruptEnable();
     
+    // Initialize the device
+    SYSTEM_Initialize();
+    
+    //Turn off LED
+    EPWM2_LoadDutyValue(LED_OFF); 
+    printf(">>>>>>>>>>>>>>>\r\n");
+    printf("Reset complete.\r\n");
     //TODO: Output board configuration.
+    
 
     while(true)
     {
@@ -94,7 +126,9 @@ void main(void)
                     printf("o: k\r\n");
                     printf("Z: Reset processor\r\n");                     
                     printf("z: Clear the terminal\r\n"); 
-                    printf("R: Record IR transmission\r\n");
+                    printf("R: Record IR transmission into buffer\r\n");
+                    printf("T: Transmit IR buffer.\r\n");
+                    printf("K: Test the keypad.\r\n");
                     //TODO: Print additional menu options once finished.
                     printf("\r\n-------------------------------------------------\r\n");
                     break;
@@ -145,7 +179,45 @@ void main(void)
                     printf("IR signal captured and loaded into buffer.\r\n");
                     
                     break;
+                   
+                //--------------------------------------------
+                //Send IR buffer
+                //--------------------------------------------
+                case 'T':
+                    printf("Press any key to start transmitting IR signal.\r\n");
+
+                    while(!EUSART1_DataReady);
+                    (void) EUSART1_Read();
                     
+                    printf("Sending complete.");
+                    
+                    break;
+                    
+                //--------------------------------------------
+                //Test Keypad
+                //-------------------------------------------- 
+                case 'K':
+                    printf("Watching for keypad presses, press any terminal key to stop.\r\n");
+
+                    while(!EUSART1_DataReady)
+                    {
+                        
+                        for(uint8_t i = 0;i < BUTTON_ROWS;i++)
+                        {
+                            for(uint8_t j = 0;j < BUTTON_COLUMNS;j++)
+                            {
+                                if(PRESSED_BUTTONS[i][j] != '\0')
+                                {
+                                    printf("%c\r\n", PRESSED_BUTTONS[i][j]);
+                                }
+                            }
+                        }
+                    }
+                    (void) EUSART1_Read();
+                    
+                    printf("Stopped watching.\r\n");
+                    
+                    break;
                 //--------------------------------------------
                 // If something unknown is hit, tell user
                 //--------------------------------------------
@@ -155,11 +227,172 @@ void main(void)
             }
         }
         
-        
-        
     }
 }
 
+//----------------------------------------------
+// Function to determine which keys are pressed
+// returns a two dimensional array of characters
+// that will match the corresponding cell in
+// "TEST_BUTTONS" if that button is pressed,
+//  '\0' otherwise.
+//----------------------------------------------
+void poll_Keypad()
+{
+    
+    for(uint8_t i = 0;i < BUTTON_ROWS;i++)
+    {
+        for(uint8_t j = 0;j < BUTTON_COLUMNS;j++)
+        {
+               PRESSED_BUTTONS[i][j] = '\0';
+        }
+    }
+    
+    COLUMN_1_SetDigitalInput();
+    COLUMN_2_SetDigitalInput();
+    COLUMN_3_SetDigitalInput();
+    ROW_1_SetDigitalOutput();
+    ROW_2_SetDigitalOutput();
+    ROW_3_SetDigitalOutput();
+    ROW_4_SetDigitalOutput();
+    
+    ROW_1_SetHigh();
+    ROW_2_SetHigh();
+    ROW_3_SetHigh();
+    ROW_4_SetHigh();
+    
+    if(COLUMN_1_GetValue() == 1)    //Column 1 is hot, find the hot row
+    {
+        ROW_1_SetLow();
+        ROW_2_SetLow();
+        ROW_3_SetLow();
+        ROW_4_SetLow();
+        
+        ROW_1_SetDigitalInput();
+        ROW_2_SetDigitalInput();
+        ROW_3_SetDigitalInput();
+        ROW_4_SetDigitalInput();
+        COLUMN_1_SetDigitalOutput();
+        COLUMN_2_SetDigitalOutput();
+        COLUMN_3_SetDigitalOutput();
+
+        COLUMN_1_SetHigh();
+        COLUMN_2_SetHigh();
+        COLUMN_3_SetHigh();
+        
+        if(ROW_1_GetValue() == 1)
+        {
+            PRESSED_BUTTONS[0][0] = '1';
+        }
+        
+        if(ROW_2_GetValue() == 1)
+        {
+            PRESSED_BUTTONS[1][0] = '4';
+        }
+        
+        if(ROW_3_GetValue() == 1)
+        {
+            PRESSED_BUTTONS[2][0] = '7';
+        }
+        
+        if(ROW_4_GetValue() == 1)
+        {
+            PRESSED_BUTTONS[3][0] = '*';
+        }
+        
+        COLUMN_1_SetLow();
+        COLUMN_2_SetLow();
+        COLUMN_3_SetLow();
+    }
+    
+    if(COLUMN_2_GetValue() == 1)    //Column 1 is hot, find the hot row
+    {
+        ROW_1_SetLow();
+        ROW_2_SetLow();
+        ROW_3_SetLow();
+        ROW_4_SetLow();
+        
+        ROW_1_SetDigitalInput();
+        ROW_2_SetDigitalInput();
+        ROW_3_SetDigitalInput();
+        ROW_4_SetDigitalInput();
+        COLUMN_1_SetDigitalOutput();
+        COLUMN_2_SetDigitalOutput();
+        COLUMN_3_SetDigitalOutput();
+
+        COLUMN_1_SetHigh();
+        COLUMN_2_SetHigh();
+        COLUMN_3_SetHigh();
+        
+        if(ROW_1_GetValue() == 1)
+        {
+            PRESSED_BUTTONS[0][1] = '2';
+        }
+        
+        if(ROW_2_GetValue() == 1)
+        {
+            PRESSED_BUTTONS[1][1] = '5';
+        }
+        
+        if(ROW_3_GetValue() == 1)
+        {
+            PRESSED_BUTTONS[2][1] = '8';
+        }
+        
+        if(ROW_4_GetValue() == 1)
+        {
+            PRESSED_BUTTONS[3][1] = '0';
+        }
+        
+        COLUMN_1_SetLow();
+        COLUMN_2_SetLow();
+        COLUMN_3_SetLow();
+    }
+    
+    if(COLUMN_3_GetValue() == 1)    //Column 1 is hot, find the hot row
+    {
+        ROW_1_SetLow();
+        ROW_2_SetLow();
+        ROW_3_SetLow();
+        ROW_4_SetLow();
+        
+        ROW_1_SetDigitalInput();
+        ROW_2_SetDigitalInput();
+        ROW_3_SetDigitalInput();
+        ROW_4_SetDigitalInput();
+        COLUMN_1_SetDigitalOutput();
+        COLUMN_2_SetDigitalOutput();
+        COLUMN_3_SetDigitalOutput();
+
+        COLUMN_1_SetHigh();
+        COLUMN_2_SetHigh();
+        COLUMN_3_SetHigh();
+        
+        if(ROW_1_GetValue() == 1)
+        {
+            PRESSED_BUTTONS[0][2] = '3';
+        }
+        
+        if(ROW_2_GetValue() == 1)
+        {
+            PRESSED_BUTTONS[1][2] = '6';
+        }
+        
+        if(ROW_3_GetValue() == 1)
+        {
+            PRESSED_BUTTONS[2][2] = '3';
+        }
+        
+        if(ROW_4_GetValue() == 1)
+        {
+            PRESSED_BUTTONS[3][2] = '3';
+        }
+        
+        COLUMN_1_SetLow();
+        COLUMN_2_SetLow();
+        COLUMN_3_SetLow();
+    }
+}
 
 //----------------------------------------------
 // Function to find the length of an IR pulse.
@@ -175,6 +408,16 @@ uint16_t pulse_Duration_In_Micro_Seconds(uint16_t pulse_Start, uint16_t pulse_En
 }
 
 //----------------------------------------------
+// Function to convert microseconds to TMR1
+// counts... it multiplies by 2, but I can't
+// be fucked to remember that.
+//----------------------------------------------
+uint16_t micro_Seconds_to_TMR1_Counts(uint16_t input)
+{
+    return input << 1;
+}
+
+//----------------------------------------------
 // ECCP1 ISR
 // Records timer 1 count when a rising edge is 
 // detected on the input pin RC2
@@ -185,8 +428,8 @@ void ECCP1_Rising_Edge_Detected()
     PULSE_RISING = TMR1_ReadTimer();
     if(INPUT_SIGNAL_AQUIRED)    //If we've already seen a full pulse, get the duration.
     {
-        IR_SIGNAL_BUFFER[IR_SIGNAL_BUFFER[0]] = pulse_Duration_In_Micro_Seconds(PULSE_FALLING, PULSE_RISING); //Add the captured pulse length to the command.
-        IR_SIGNAL_BUFFER[0]++;  //Increment elements
+        IR_SIGNAL_BUFFER[IR_SIGNAL_BUFFER[LENGTH]] = pulse_Duration_In_Micro_Seconds(PULSE_FALLING, PULSE_RISING); //Add the captured pulse length to the command.
+        IR_SIGNAL_BUFFER[LENGTH]++;  //Increment elements
     }
     else    //Else, the next edge will complete the pulse.
     {
@@ -207,12 +450,12 @@ void ECCP3_Falling_Edge_Detected()
     PULSE_RISING = TMR1_ReadTimer();
     if(INPUT_SIGNAL_AQUIRED)    //If we've already seen a full pulse, get the duration.
     {
-        IR_SIGNAL_BUFFER[IR_SIGNAL_BUFFER[0]] = pulse_Duration_In_Micro_Seconds(PULSE_RISING, PULSE_FALLING); //Add the captured pulse length to the command.
-        IR_SIGNAL_BUFFER[0]++;  //Increment elements
+        IR_SIGNAL_BUFFER[IR_SIGNAL_BUFFER[LENGTH]] = pulse_Duration_In_Micro_Seconds(PULSE_RISING, PULSE_FALLING); //Add the captured pulse length to the command.
+        IR_SIGNAL_BUFFER[LENGTH]++;  //Increment elements
     }
     else    //Real IR signals don't start high, so if we wind up here it's garbage.
     {
-        
+        //do nothing
     }
     
     PIR4bits.CCP3IF = 0; //Clear interrupt flag, see technical docs page 176. 
@@ -225,6 +468,8 @@ void ECCP3_Falling_Edge_Detected()
 //----------------------------------------------
 void my_TMR1_ISR()
 {
+    static uint16_t index = 0;   //Index for the IR buffer
+    
     if(input_Signal_Complete() == true && RECORD_IR_SIGNAL == true)// Reset flags if recording is complete
     {
         INPUT_SIGNAL_COMPLETE = 1;
@@ -232,7 +477,35 @@ void my_TMR1_ISR()
         INPUT_SIGNAL_AQUIRED = 0;
     }
     
-    //TODO: Add flags and logic to transmit IR codes
+    //IR transmission logic
+    if(TRANSMIT_SIGNAL == true) //If we're transmitting
+    {
+        index++;
+        
+        //TODO: Add logic to handle pause and stop bits in the ISR
+        
+        if(index < IR_SIGNAL_BUFFER[LENGTH])    //If we still have signal left to send, send it
+        {
+            if(((index >> 1) & 0b0001))   //If the index is odd, we know the signal should be high
+            {
+                EPWM2_LoadDutyValue(LED_OFF); 
+            }
+            else
+            {
+                EPWM2_LoadDutyValue(LED_ON); 
+            }
+  
+            TMR1_WriteTimer(0x10000 - micro_Seconds_to_TMR1_Counts(IR_SIGNAL_BUFFER[index]));   //Set the timer for the pulse duration.
+        }
+        else    //else, stop sending
+        {
+            TRANSMIT_SIGNAL = false;
+        }
+    }
+    else
+    {
+        index = 0;
+    }
     
     PIR1bits.TMR1IF= 0; 
 }
@@ -243,7 +516,9 @@ void my_TMR1_ISR()
 //----------------------------------------------
 void my_TRM0_ISR()
 {
-    //TODO: Poll the keypad for presses every millisecond.
+    poll_Keypad();
+    
+    TMR0_WriteTimer(0xFFFF - TMR0_1_MS);
     
     INTCONbits.TMR0IF= 0;
 }

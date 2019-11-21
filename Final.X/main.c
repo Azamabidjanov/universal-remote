@@ -64,8 +64,6 @@ uint8_t INPUT_SIGNAL_COMPLETE = 1;
 uint8_t RECORD_IR_SIGNAL = 0;
 
 //ISR Declarations
-void ECCP1_Rising_Edge_Detected(void);
-void ECCP3_Falling_Edge_Detected(void);
 void my_TMR0_ISR(void);
 void my_TMR1_ISR(void);
 
@@ -204,13 +202,16 @@ void main(void)
                         {
                             for(uint8_t j = 0;j < BUTTON_COLUMNS;j++)
                             {
-                                if(PRESSED_BUTTONS[i][j] != TEST_BUTTONS[i][j])
+                                if(PRESSED_BUTTONS[i][j] == TEST_BUTTONS[i][j])
                                 {
                                     printf("%c\r\n", PRESSED_BUTTONS[i][j]);
                                 }
                             }
                         }
+                        
                     }
+                    
+                    
                     (void) EUSART1_Read();
                     
                     printf("Stopped watching.\r\n");
@@ -246,150 +247,96 @@ void poll_Keypad()
         }
     }
     
-    COLUMN_1_SetDigitalInput();
-    COLUMN_2_SetDigitalInput();
-    COLUMN_3_SetDigitalInput();
-    ROW_1_SetDigitalOutput();
-    ROW_2_SetDigitalOutput();
-    ROW_3_SetDigitalOutput();
-    ROW_4_SetDigitalOutput();
+    //COLUMN_1_SetDigitalInput();
+    //COLUMN_2_SetDigitalInput();
+    //COLUMN_3_SetDigitalInput();
+    //ROW_1_SetDigitalOutput();
+    //ROW_2_SetDigitalOutput();
+    //ROW_3_SetDigitalOutput();
+    //ROW_4_SetDigitalOutput();
+    
+    ROW_1_SetLow();
+    ROW_2_SetLow();
+    ROW_3_SetLow();
+    ROW_4_SetLow();
     
     ROW_1_SetHigh();
+    
+  
+    if(COLUMN_1_GetValue() == 1)    
+    {
+        PRESSED_BUTTONS[0][0] = '1';
+    }
+    
+    if(COLUMN_2_GetValue() == 1)    
+    {
+        PRESSED_BUTTONS[0][1] = '2';
+    }
+    
+    
+    if(COLUMN_3_GetValue() == 1)    
+    {
+        PRESSED_BUTTONS[0][2] = '3';
+    }
+    
+    ROW_1_SetLow();
+    
     ROW_2_SetHigh();
+  
+    if(COLUMN_1_GetValue() == 1)    
+    {
+        PRESSED_BUTTONS[1][0] = '4';
+    }
+    
+    if(COLUMN_2_GetValue() == 1)    
+    {
+        PRESSED_BUTTONS[1][1] = '5';
+    }
+    
+    if(COLUMN_3_GetValue() == 1)    
+    {
+        PRESSED_BUTTONS[1][2] = '6';
+    }
+    
+    ROW_2_SetLow();
+    
     ROW_3_SetHigh();
+  
+    if(COLUMN_1_GetValue() == 1)    
+    {
+        PRESSED_BUTTONS[2][0] = '7';
+    }
+    
+    if(COLUMN_2_GetValue() == 1)    
+    {
+        PRESSED_BUTTONS[2][1] = '8';
+    }
+    
+    if(COLUMN_3_GetValue() == 1)    
+    {
+        PRESSED_BUTTONS[2][2] = '9';
+    }
+    
+    ROW_3_SetLow();
+    
     ROW_4_SetHigh();
     
-    if(COLUMN_1_GetValue() == 1)    //Column 1 is hot, find the hot row
+    if(COLUMN_1_GetValue() == 1)    
     {
-        ROW_1_SetLow();
-        ROW_2_SetLow();
-        ROW_3_SetLow();
-        ROW_4_SetLow();
-        
-        ROW_1_SetDigitalInput();
-        ROW_2_SetDigitalInput();
-        ROW_3_SetDigitalInput();
-        ROW_4_SetDigitalInput();
-        COLUMN_1_SetDigitalOutput();
-        COLUMN_2_SetDigitalOutput();
-        COLUMN_3_SetDigitalOutput();
-
-        COLUMN_1_SetHigh();
-        COLUMN_2_SetHigh();
-        COLUMN_3_SetHigh();
-        
-        if(ROW_1_GetValue() == 1)
-        {
-            PRESSED_BUTTONS[0][0] = '1';
-        }
-        
-        if(ROW_2_GetValue() == 1)
-        {
-            PRESSED_BUTTONS[1][0] = '4';
-        }
-        
-        if(ROW_3_GetValue() == 1)
-        {
-            PRESSED_BUTTONS[2][0] = '7';
-        }
-        
-        if(ROW_4_GetValue() == 1)
-        {
-            PRESSED_BUTTONS[3][0] = '*';
-        }
-        
-        COLUMN_1_SetLow();
-        COLUMN_2_SetLow();
-        COLUMN_3_SetLow();
+        PRESSED_BUTTONS[3][0] = '*';
     }
     
-    if(COLUMN_2_GetValue() == 1)    //Column 1 is hot, find the hot row
+    if(COLUMN_2_GetValue() == 1)    
     {
-        ROW_1_SetLow();
-        ROW_2_SetLow();
-        ROW_3_SetLow();
-        ROW_4_SetLow();
-        
-        ROW_1_SetDigitalInput();
-        ROW_2_SetDigitalInput();
-        ROW_3_SetDigitalInput();
-        ROW_4_SetDigitalInput();
-        COLUMN_1_SetDigitalOutput();
-        COLUMN_2_SetDigitalOutput();
-        COLUMN_3_SetDigitalOutput();
-
-        COLUMN_1_SetHigh();
-        COLUMN_2_SetHigh();
-        COLUMN_3_SetHigh();
-        
-        if(ROW_1_GetValue() == 1)
-        {
-            PRESSED_BUTTONS[0][1] = '2';
-        }
-        
-        if(ROW_2_GetValue() == 1)
-        {
-            PRESSED_BUTTONS[1][1] = '5';
-        }
-        
-        if(ROW_3_GetValue() == 1)
-        {
-            PRESSED_BUTTONS[2][1] = '8';
-        }
-        
-        if(ROW_4_GetValue() == 1)
-        {
-            PRESSED_BUTTONS[3][1] = '0';
-        }
-        
-        COLUMN_1_SetLow();
-        COLUMN_2_SetLow();
-        COLUMN_3_SetLow();
+        PRESSED_BUTTONS[3][1] = '0';
     }
     
-    if(COLUMN_3_GetValue() == 1)    //Column 1 is hot, find the hot row
+    if(COLUMN_3_GetValue() == 1)    
     {
-        ROW_1_SetLow();
-        ROW_2_SetLow();
-        ROW_3_SetLow();
-        ROW_4_SetLow();
-        
-        ROW_1_SetDigitalInput();
-        ROW_2_SetDigitalInput();
-        ROW_3_SetDigitalInput();
-        ROW_4_SetDigitalInput();
-        COLUMN_1_SetDigitalOutput();
-        COLUMN_2_SetDigitalOutput();
-        COLUMN_3_SetDigitalOutput();
-
-        COLUMN_1_SetHigh();
-        COLUMN_2_SetHigh();
-        COLUMN_3_SetHigh();
-        
-        if(ROW_1_GetValue() == 1)
-        {
-            PRESSED_BUTTONS[0][2] = '3';
-        }
-        
-        if(ROW_2_GetValue() == 1)
-        {
-            PRESSED_BUTTONS[1][2] = '6';
-        }
-        
-        if(ROW_3_GetValue() == 1)
-        {
-            PRESSED_BUTTONS[2][2] = '9';
-        }
-        
-        if(ROW_4_GetValue() == 1)
-        {
-            PRESSED_BUTTONS[3][2] = '#';
-        }
-        
-        COLUMN_1_SetLow();
-        COLUMN_2_SetLow();
-        COLUMN_3_SetLow();
+        PRESSED_BUTTONS[3][2] = '#';
     }
+    
+    ROW_4_SetLow();
 }
 
 //----------------------------------------------
@@ -415,49 +362,6 @@ uint16_t micro_Seconds_to_TMR1_Counts(uint16_t input)
     return input << 1;
 }
 
-//----------------------------------------------
-// ECCP1 ISR
-// Records timer 1 count when a rising edge is 
-// detected on the input pin RC2
-// Note: RC2 will need to be jumpered to RC4
-//----------------------------------------------
-void ECCP1_Rising_Edge_Detected()
-{
-    PULSE_RISING = TMR1_ReadTimer();
-    if(INPUT_SIGNAL_AQUIRED)    //If we've already seen a full pulse, get the duration.
-    {
-        IR_SIGNAL_BUFFER[IR_SIGNAL_BUFFER[LENGTH]] = pulse_Duration_In_Micro_Seconds(PULSE_FALLING, PULSE_RISING); //Add the captured pulse length to the command.
-        IR_SIGNAL_BUFFER[LENGTH]++;  //Increment elements
-    }
-    else    //Else, the next edge will complete the pulse.
-    {
-        INPUT_SIGNAL_AQUIRED = true;
-    }
-    
-    PIR1bits.CCP1IF = 0; //Clear interrupt flag, see technical docs page 176.
-}
-
-//----------------------------------------------
-// ECCP3 ISR
-// Records timer 1 count when a falling edge is 
-// detected on the input pin RC2
-// Note: RB5 will need to be jumpered to RC4
-//----------------------------------------------
-void ECCP3_Falling_Edge_Detected()
-{
-    PULSE_RISING = TMR1_ReadTimer();
-    if(INPUT_SIGNAL_AQUIRED)    //If we've already seen a full pulse, get the duration.
-    {
-        IR_SIGNAL_BUFFER[IR_SIGNAL_BUFFER[LENGTH]] = pulse_Duration_In_Micro_Seconds(PULSE_RISING, PULSE_FALLING); //Add the captured pulse length to the command.
-        IR_SIGNAL_BUFFER[LENGTH]++;  //Increment elements
-    }
-    else    //Real IR signals don't start high, so if we wind up here it's garbage.
-    {
-        //do nothing
-    }
-    
-    PIR4bits.CCP3IF = 0; //Clear interrupt flag, see technical docs page 176. 
-}
 
 //----------------------------------------------
 // Timer 1 ISR

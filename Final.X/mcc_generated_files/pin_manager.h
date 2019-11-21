@@ -79,105 +79,83 @@
 #define COLUMN_2_SetAnalogMode()      do { ANSELAbits.ANSA0 = 1; } while(0)
 #define COLUMN_2_SetDigitalMode()     do { ANSELAbits.ANSA0 = 0; } while(0)
 
-// get/set ROW_1 aliases
-#define ROW_1_TRIS                 TRISAbits.TRISA1
-#define ROW_1_LAT                  LATAbits.LATA1
-#define ROW_1_PORT                 PORTAbits.RA1
-#define ROW_1_ANS                  ANSELAbits.ANSA1
-#define ROW_1_SetHigh()            do { LATAbits.LATA1 = 1; } while(0)
-#define ROW_1_SetLow()             do { LATAbits.LATA1 = 0; } while(0)
-#define ROW_1_Toggle()             do { LATAbits.LATA1 = ~LATAbits.LATA1; } while(0)
-#define ROW_1_GetValue()           PORTAbits.RA1
-#define ROW_1_SetDigitalInput()    do { TRISAbits.TRISA1 = 1; } while(0)
-#define ROW_1_SetDigitalOutput()   do { TRISAbits.TRISA1 = 0; } while(0)
-#define ROW_1_SetAnalogMode()      do { ANSELAbits.ANSA1 = 1; } while(0)
-#define ROW_1_SetDigitalMode()     do { ANSELAbits.ANSA1 = 0; } while(0)
-
-// get/set COLUMN_1 aliases
-#define COLUMN_1_TRIS                 TRISAbits.TRISA2
-#define COLUMN_1_LAT                  LATAbits.LATA2
-#define COLUMN_1_PORT                 PORTAbits.RA2
-#define COLUMN_1_ANS                  ANSELAbits.ANSA2
-#define COLUMN_1_SetHigh()            do { LATAbits.LATA2 = 1; } while(0)
-#define COLUMN_1_SetLow()             do { LATAbits.LATA2 = 0; } while(0)
-#define COLUMN_1_Toggle()             do { LATAbits.LATA2 = ~LATAbits.LATA2; } while(0)
-#define COLUMN_1_GetValue()           PORTAbits.RA2
-#define COLUMN_1_SetDigitalInput()    do { TRISAbits.TRISA2 = 1; } while(0)
-#define COLUMN_1_SetDigitalOutput()   do { TRISAbits.TRISA2 = 0; } while(0)
-#define COLUMN_1_SetAnalogMode()      do { ANSELAbits.ANSA2 = 1; } while(0)
-#define COLUMN_1_SetDigitalMode()     do { ANSELAbits.ANSA2 = 0; } while(0)
+// get/set ROW_3 aliases
+#define ROW_3_TRIS                 TRISAbits.TRISA1
+#define ROW_3_LAT                  LATAbits.LATA1
+#define ROW_3_PORT                 PORTAbits.RA1
+#define ROW_3_ANS                  ANSELAbits.ANSA1
+#define ROW_3_SetHigh()            do { LATAbits.LATA1 = 1; } while(0)
+#define ROW_3_SetLow()             do { LATAbits.LATA1 = 0; } while(0)
+#define ROW_3_Toggle()             do { LATAbits.LATA1 = ~LATAbits.LATA1; } while(0)
+#define ROW_3_GetValue()           PORTAbits.RA1
+#define ROW_3_SetDigitalInput()    do { TRISAbits.TRISA1 = 1; } while(0)
+#define ROW_3_SetDigitalOutput()   do { TRISAbits.TRISA1 = 0; } while(0)
+#define ROW_3_SetAnalogMode()      do { ANSELAbits.ANSA1 = 1; } while(0)
+#define ROW_3_SetDigitalMode()     do { ANSELAbits.ANSA1 = 0; } while(0)
 
 // get/set ROW_4 aliases
-#define ROW_4_TRIS                 TRISAbits.TRISA3
-#define ROW_4_LAT                  LATAbits.LATA3
-#define ROW_4_PORT                 PORTAbits.RA3
-#define ROW_4_ANS                  ANSELAbits.ANSA3
-#define ROW_4_SetHigh()            do { LATAbits.LATA3 = 1; } while(0)
-#define ROW_4_SetLow()             do { LATAbits.LATA3 = 0; } while(0)
-#define ROW_4_Toggle()             do { LATAbits.LATA3 = ~LATAbits.LATA3; } while(0)
-#define ROW_4_GetValue()           PORTAbits.RA3
-#define ROW_4_SetDigitalInput()    do { TRISAbits.TRISA3 = 1; } while(0)
-#define ROW_4_SetDigitalOutput()   do { TRISAbits.TRISA3 = 0; } while(0)
-#define ROW_4_SetAnalogMode()      do { ANSELAbits.ANSA3 = 1; } while(0)
-#define ROW_4_SetDigitalMode()     do { ANSELAbits.ANSA3 = 0; } while(0)
+#define ROW_4_TRIS                 TRISAbits.TRISA4
+#define ROW_4_LAT                  LATAbits.LATA4
+#define ROW_4_PORT                 PORTAbits.RA4
+#define ROW_4_SetHigh()            do { LATAbits.LATA4 = 1; } while(0)
+#define ROW_4_SetLow()             do { LATAbits.LATA4 = 0; } while(0)
+#define ROW_4_Toggle()             do { LATAbits.LATA4 = ~LATAbits.LATA4; } while(0)
+#define ROW_4_GetValue()           PORTAbits.RA4
+#define ROW_4_SetDigitalInput()    do { TRISAbits.TRISA4 = 1; } while(0)
+#define ROW_4_SetDigitalOutput()   do { TRISAbits.TRISA4 = 0; } while(0)
 
 // get/set COLUMN_3 aliases
-#define COLUMN_3_TRIS                 TRISAbits.TRISA4
-#define COLUMN_3_LAT                  LATAbits.LATA4
-#define COLUMN_3_PORT                 PORTAbits.RA4
-#define COLUMN_3_SetHigh()            do { LATAbits.LATA4 = 1; } while(0)
-#define COLUMN_3_SetLow()             do { LATAbits.LATA4 = 0; } while(0)
-#define COLUMN_3_Toggle()             do { LATAbits.LATA4 = ~LATAbits.LATA4; } while(0)
-#define COLUMN_3_GetValue()           PORTAbits.RA4
-#define COLUMN_3_SetDigitalInput()    do { TRISAbits.TRISA4 = 1; } while(0)
-#define COLUMN_3_SetDigitalOutput()   do { TRISAbits.TRISA4 = 0; } while(0)
+#define COLUMN_3_TRIS                 TRISAbits.TRISA6
+#define COLUMN_3_LAT                  LATAbits.LATA6
+#define COLUMN_3_PORT                 PORTAbits.RA6
+#define COLUMN_3_SetHigh()            do { LATAbits.LATA6 = 1; } while(0)
+#define COLUMN_3_SetLow()             do { LATAbits.LATA6 = 0; } while(0)
+#define COLUMN_3_Toggle()             do { LATAbits.LATA6 = ~LATAbits.LATA6; } while(0)
+#define COLUMN_3_GetValue()           PORTAbits.RA6
+#define COLUMN_3_SetDigitalInput()    do { TRISAbits.TRISA6 = 1; } while(0)
+#define COLUMN_3_SetDigitalOutput()   do { TRISAbits.TRISA6 = 0; } while(0)
 
-// get/set ROW_3 aliases
-#define ROW_3_TRIS                 TRISAbits.TRISA5
-#define ROW_3_LAT                  LATAbits.LATA5
-#define ROW_3_PORT                 PORTAbits.RA5
-#define ROW_3_ANS                  ANSELAbits.ANSA5
-#define ROW_3_SetHigh()            do { LATAbits.LATA5 = 1; } while(0)
-#define ROW_3_SetLow()             do { LATAbits.LATA5 = 0; } while(0)
-#define ROW_3_Toggle()             do { LATAbits.LATA5 = ~LATAbits.LATA5; } while(0)
-#define ROW_3_GetValue()           PORTAbits.RA5
-#define ROW_3_SetDigitalInput()    do { TRISAbits.TRISA5 = 1; } while(0)
-#define ROW_3_SetDigitalOutput()   do { TRISAbits.TRISA5 = 0; } while(0)
-#define ROW_3_SetAnalogMode()      do { ANSELAbits.ANSA5 = 1; } while(0)
-#define ROW_3_SetDigitalMode()     do { ANSELAbits.ANSA5 = 0; } while(0)
+// get/set COLUMN_1 aliases
+#define COLUMN_1_TRIS                 TRISCbits.TRISC2
+#define COLUMN_1_LAT                  LATCbits.LATC2
+#define COLUMN_1_PORT                 PORTCbits.RC2
+#define COLUMN_1_ANS                  ANSELCbits.ANSC2
+#define COLUMN_1_SetHigh()            do { LATCbits.LATC2 = 1; } while(0)
+#define COLUMN_1_SetLow()             do { LATCbits.LATC2 = 0; } while(0)
+#define COLUMN_1_Toggle()             do { LATCbits.LATC2 = ~LATCbits.LATC2; } while(0)
+#define COLUMN_1_GetValue()           PORTCbits.RC2
+#define COLUMN_1_SetDigitalInput()    do { TRISCbits.TRISC2 = 1; } while(0)
+#define COLUMN_1_SetDigitalOutput()   do { TRISCbits.TRISC2 = 0; } while(0)
+#define COLUMN_1_SetAnalogMode()      do { ANSELCbits.ANSC2 = 1; } while(0)
+#define COLUMN_1_SetDigitalMode()     do { ANSELCbits.ANSC2 = 0; } while(0)
 
 // get/set ROW_2 aliases
-#define ROW_2_TRIS                 TRISAbits.TRISA6
-#define ROW_2_LAT                  LATAbits.LATA6
-#define ROW_2_PORT                 PORTAbits.RA6
-#define ROW_2_SetHigh()            do { LATAbits.LATA6 = 1; } while(0)
-#define ROW_2_SetLow()             do { LATAbits.LATA6 = 0; } while(0)
-#define ROW_2_Toggle()             do { LATAbits.LATA6 = ~LATAbits.LATA6; } while(0)
-#define ROW_2_GetValue()           PORTAbits.RA6
-#define ROW_2_SetDigitalInput()    do { TRISAbits.TRISA6 = 1; } while(0)
-#define ROW_2_SetDigitalOutput()   do { TRISAbits.TRISA6 = 0; } while(0)
+#define ROW_2_TRIS                 TRISCbits.TRISC3
+#define ROW_2_LAT                  LATCbits.LATC3
+#define ROW_2_PORT                 PORTCbits.RC3
+#define ROW_2_ANS                  ANSELCbits.ANSC3
+#define ROW_2_SetHigh()            do { LATCbits.LATC3 = 1; } while(0)
+#define ROW_2_SetLow()             do { LATCbits.LATC3 = 0; } while(0)
+#define ROW_2_Toggle()             do { LATCbits.LATC3 = ~LATCbits.LATC3; } while(0)
+#define ROW_2_GetValue()           PORTCbits.RC3
+#define ROW_2_SetDigitalInput()    do { TRISCbits.TRISC3 = 1; } while(0)
+#define ROW_2_SetDigitalOutput()   do { TRISCbits.TRISC3 = 0; } while(0)
+#define ROW_2_SetAnalogMode()      do { ANSELCbits.ANSC3 = 1; } while(0)
+#define ROW_2_SetDigitalMode()     do { ANSELCbits.ANSC3 = 0; } while(0)
 
-// get/set RB5 procedures
-#define RB5_SetHigh()            do { LATBbits.LATB5 = 1; } while(0)
-#define RB5_SetLow()             do { LATBbits.LATB5 = 0; } while(0)
-#define RB5_Toggle()             do { LATBbits.LATB5 = ~LATBbits.LATB5; } while(0)
-#define RB5_GetValue()              PORTBbits.RB5
-#define RB5_SetDigitalInput()    do { TRISBbits.TRISB5 = 1; } while(0)
-#define RB5_SetDigitalOutput()   do { TRISBbits.TRISB5 = 0; } while(0)
-#define RB5_SetPullup()             do { WPUBbits.WPUB5 = 1; } while(0)
-#define RB5_ResetPullup()           do { WPUBbits.WPUB5 = 0; } while(0)
-#define RB5_SetAnalogMode()         do { ANSELBbits.ANSB5 = 1; } while(0)
-#define RB5_SetDigitalMode()        do { ANSELBbits.ANSB5 = 0; } while(0)
-
-// get/set RC2 procedures
-#define RC2_SetHigh()            do { LATCbits.LATC2 = 1; } while(0)
-#define RC2_SetLow()             do { LATCbits.LATC2 = 0; } while(0)
-#define RC2_Toggle()             do { LATCbits.LATC2 = ~LATCbits.LATC2; } while(0)
-#define RC2_GetValue()              PORTCbits.RC2
-#define RC2_SetDigitalInput()    do { TRISCbits.TRISC2 = 1; } while(0)
-#define RC2_SetDigitalOutput()   do { TRISCbits.TRISC2 = 0; } while(0)
-#define RC2_SetAnalogMode()         do { ANSELCbits.ANSC2 = 1; } while(0)
-#define RC2_SetDigitalMode()        do { ANSELCbits.ANSC2 = 0; } while(0)
+// get/set ROW_1 aliases
+#define ROW_1_TRIS                 TRISCbits.TRISC5
+#define ROW_1_LAT                  LATCbits.LATC5
+#define ROW_1_PORT                 PORTCbits.RC5
+#define ROW_1_ANS                  ANSELCbits.ANSC5
+#define ROW_1_SetHigh()            do { LATCbits.LATC5 = 1; } while(0)
+#define ROW_1_SetLow()             do { LATCbits.LATC5 = 0; } while(0)
+#define ROW_1_Toggle()             do { LATCbits.LATC5 = ~LATCbits.LATC5; } while(0)
+#define ROW_1_GetValue()           PORTCbits.RC5
+#define ROW_1_SetDigitalInput()    do { TRISCbits.TRISC5 = 1; } while(0)
+#define ROW_1_SetDigitalOutput()   do { TRISCbits.TRISC5 = 0; } while(0)
+#define ROW_1_SetAnalogMode()      do { ANSELCbits.ANSC5 = 1; } while(0)
+#define ROW_1_SetDigitalMode()     do { ANSELCbits.ANSC5 = 0; } while(0)
 
 // get/set RC6 procedures
 #define RC6_SetHigh()            do { LATCbits.LATC6 = 1; } while(0)

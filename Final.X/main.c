@@ -78,20 +78,22 @@ void main(void)
     char cmd;
     uint8_t i;
     
+    // Initialize the device
+    SYSTEM_Initialize();
+
     // Set timer one to run for one full cycle. MUST BE DONE
     // BEFORE enabling interrupts, otherwise that while loop becomes an
     // infinite loop.  Doing this to give EUSART1's baud rate generator time
     // to stabilize - this will make the splash screen looks better
-    //TMR1_WriteTimer(0x0000);
-    //PIR1bits.TMR1IF= 0; 
-    //while(PIR1bits.TMR1IF == 0);
-    //This is broken.
-    
-    // Initialize the device
-    //SYSTEM_Initialize();
+    TMR1_WriteTimer(0x0000);
+    PIR1bits.TMR1IF= 0; 
+    while(PIR1bits.TMR1IF == 0);
     
     //Set custom ISRs
-    //TODO: Find a way to set custom ISRs
+    //TODO: Find a way to set custom ISRs for ECCP1 and ECCP3
+    
+    TMR0_SetInterruptHandler(my_TMR0_ISR);
+    TMR1_SetInterruptHandler(my_TMR1_ISR);
     
     // Enable the Global Interrupts
     INTERRUPT_GlobalInterruptEnable();
@@ -99,12 +101,8 @@ void main(void)
     // Enable the Peripheral Interrupts
     INTERRUPT_PeripheralInterruptEnable();
     
-    // Initialize the device
-    SYSTEM_Initialize();
-    
     //Turn off LED
     EPWM2_LoadDutyValue(LED_OFF); 
-    printf(">>>>>>>>>>>>>>>\r\n");
     printf("Reset complete.\r\n");
     //TODO: Output board configuration.
     
@@ -206,7 +204,7 @@ void main(void)
                         {
                             for(uint8_t j = 0;j < BUTTON_COLUMNS;j++)
                             {
-                                if(PRESSED_BUTTONS[i][j] != '\0')
+                                if(PRESSED_BUTTONS[i][j] != TEST_BUTTONS[i][j])
                                 {
                                     printf("%c\r\n", PRESSED_BUTTONS[i][j]);
                                 }
@@ -380,12 +378,12 @@ void poll_Keypad()
         
         if(ROW_3_GetValue() == 1)
         {
-            PRESSED_BUTTONS[2][2] = '3';
+            PRESSED_BUTTONS[2][2] = '9';
         }
         
         if(ROW_4_GetValue() == 1)
         {
-            PRESSED_BUTTONS[3][2] = '3';
+            PRESSED_BUTTONS[3][2] = '#';
         }
         
         COLUMN_1_SetLow();
@@ -514,7 +512,7 @@ void my_TMR1_ISR()
 // Timer 0 ISR
 // Primarily used for polling the keypad.
 //----------------------------------------------
-void my_TRM0_ISR()
+void my_TMR0_ISR()
 {
     poll_Keypad();
     

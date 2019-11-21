@@ -240,13 +240,14 @@ void main(void)
                     while(!EUSART1_DataReady)
                     {
                         
-                        for(uint8_t i = 0;i < BUTTON_ROWS;i++)
+                        for(uint8_t i = 0;i < BUTTON_ROWS; i++)
                         {
                             for(uint8_t j = 0;j < BUTTON_COLUMNS;j++)
                             {
                                 if(PRESSED_BUTTONS[i][j] == TEST_BUTTONS[i][j])
                                 {
                                     printf("%c\r\n", PRESSED_BUTTONS[i][j]);
+                                    while(PRESSED_BUTTONS[i][j] == TEST_BUTTONS[i][j]);
                                 }
                             }
                         }
@@ -305,7 +306,13 @@ void poll_Keypad()
     ROW_1_SetHigh();
     
   
-    if(COLUMN_1_GetValue() == 1)    
+    
+    if(COLUMN_0_GetValue() == 1)    
+    {
+        PRESSED_BUTTONS[0][0] = '1';
+    }
+    
+    if(COLUMN_0_GetValue() == 1)    
     {
         PRESSED_BUTTONS[0][0] = '1';
     }
@@ -314,7 +321,6 @@ void poll_Keypad()
     {
         PRESSED_BUTTONS[0][1] = '2';
     }
-    
     
     if(COLUMN_3_GetValue() == 1)    
     {
@@ -325,7 +331,12 @@ void poll_Keypad()
     
     ROW_2_SetHigh();
   
-    if(COLUMN_1_GetValue() == 1)    
+    if(COLUMN_0_GetValue() == 1)    
+    {
+        PRESSED_BUTTONS[1][0] = '4';
+    }
+    
+    if(COLUMN_0_GetValue() == 1)    
     {
         PRESSED_BUTTONS[1][0] = '4';
     }
@@ -344,7 +355,12 @@ void poll_Keypad()
     
     ROW_3_SetHigh();
   
-    if(COLUMN_1_GetValue() == 1)    
+    if(COLUMN_0_GetValue() == 1)    
+    {
+        PRESSED_BUTTONS[2][0] = '7';
+    }
+    
+    if(COLUMN_0_GetValue() == 1)    
     {
         PRESSED_BUTTONS[2][0] = '7';
     }
@@ -363,7 +379,12 @@ void poll_Keypad()
     
     ROW_4_SetHigh();
     
-    if(COLUMN_1_GetValue() == 1)    
+    if(COLUMN_0_GetValue() == 1)    
+    {
+        PRESSED_BUTTONS[3][0] = '*';
+    }
+    
+    if(COLUMN_0_GetValue() == 1)    
     {
         PRESSED_BUTTONS[3][0] = '*';
     }

@@ -2443,7 +2443,7 @@
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="Pin Module" name="Custom Name RC2"/>
-         <value>COLUMN_1</value>
+         <value>COLUMN_0</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.OptionKey" moduleName="TMR2" registerAlias="TCON" settingAlias="TOUTPS" alias="1:10"/>
@@ -4665,7 +4665,7 @@
       </entry>
       <entry>
          <file>mcc_generated_files\pin_manager.h</file>
-         <hash>c951be8d6aff525fa9b855e8040a452a4da9296e6dc2dfdb7365401258a7b8d9</hash>
+         <hash>5e4de7aba8a22e1305cb87aec37d08b1189e443f580ca77cc4c81495f22dbea9</hash>
       </entry>
       <entry>
          <file>mcc_generated_files\tmr1.c</file>

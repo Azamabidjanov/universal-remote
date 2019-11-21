@@ -123,19 +123,19 @@
 #define RC1_SetDigitalInput()    do { TRISCbits.TRISC1 = 1; } while(0)
 #define RC1_SetDigitalOutput()   do { TRISCbits.TRISC1 = 0; } while(0)
 
-// get/set COLUMN_1 aliases
-#define COLUMN_1_TRIS                 TRISCbits.TRISC2
-#define COLUMN_1_LAT                  LATCbits.LATC2
-#define COLUMN_1_PORT                 PORTCbits.RC2
-#define COLUMN_1_ANS                  ANSELCbits.ANSC2
-#define COLUMN_1_SetHigh()            do { LATCbits.LATC2 = 1; } while(0)
-#define COLUMN_1_SetLow()             do { LATCbits.LATC2 = 0; } while(0)
-#define COLUMN_1_Toggle()             do { LATCbits.LATC2 = ~LATCbits.LATC2; } while(0)
-#define COLUMN_1_GetValue()           PORTCbits.RC2
-#define COLUMN_1_SetDigitalInput()    do { TRISCbits.TRISC2 = 1; } while(0)
-#define COLUMN_1_SetDigitalOutput()   do { TRISCbits.TRISC2 = 0; } while(0)
-#define COLUMN_1_SetAnalogMode()      do { ANSELCbits.ANSC2 = 1; } while(0)
-#define COLUMN_1_SetDigitalMode()     do { ANSELCbits.ANSC2 = 0; } while(0)
+// get/set COLUMN_0 aliases
+#define COLUMN_0_TRIS                 TRISCbits.TRISC2
+#define COLUMN_0_LAT                  LATCbits.LATC2
+#define COLUMN_0_PORT                 PORTCbits.RC2
+#define COLUMN_0_ANS                  ANSELCbits.ANSC2
+#define COLUMN_0_SetHigh()            do { LATCbits.LATC2 = 1; } while(0)
+#define COLUMN_0_SetLow()             do { LATCbits.LATC2 = 0; } while(0)
+#define COLUMN_0_Toggle()             do { LATCbits.LATC2 = ~LATCbits.LATC2; } while(0)
+#define COLUMN_0_GetValue()           PORTCbits.RC2
+#define COLUMN_0_SetDigitalInput()    do { TRISCbits.TRISC2 = 1; } while(0)
+#define COLUMN_0_SetDigitalOutput()   do { TRISCbits.TRISC2 = 0; } while(0)
+#define COLUMN_0_SetAnalogMode()      do { ANSELCbits.ANSC2 = 1; } while(0)
+#define COLUMN_0_SetDigitalMode()     do { ANSELCbits.ANSC2 = 0; } while(0)
 
 // get/set ROW_2 aliases
 #define ROW_2_TRIS                 TRISCbits.TRISC3

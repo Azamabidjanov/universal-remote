@@ -115,6 +115,14 @@
 #define COLUMN_3_SetDigitalInput()    do { TRISAbits.TRISA6 = 1; } while(0)
 #define COLUMN_3_SetDigitalOutput()   do { TRISAbits.TRISA6 = 0; } while(0)
 
+// get/set RC1 procedures
+#define RC1_SetHigh()            do { LATCbits.LATC1 = 1; } while(0)
+#define RC1_SetLow()             do { LATCbits.LATC1 = 0; } while(0)
+#define RC1_Toggle()             do { LATCbits.LATC1 = ~LATCbits.LATC1; } while(0)
+#define RC1_GetValue()              PORTCbits.RC1
+#define RC1_SetDigitalInput()    do { TRISCbits.TRISC1 = 1; } while(0)
+#define RC1_SetDigitalOutput()   do { TRISCbits.TRISC1 = 0; } while(0)
+
 // get/set COLUMN_1 aliases
 #define COLUMN_1_TRIS                 TRISCbits.TRISC2
 #define COLUMN_1_LAT                  LATCbits.LATC2
@@ -142,6 +150,20 @@
 #define ROW_2_SetDigitalOutput()   do { TRISCbits.TRISC3 = 0; } while(0)
 #define ROW_2_SetAnalogMode()      do { ANSELCbits.ANSC3 = 1; } while(0)
 #define ROW_2_SetDigitalMode()     do { ANSELCbits.ANSC3 = 0; } while(0)
+
+// get/set IR_RX aliases
+#define IR_RX_TRIS                 TRISCbits.TRISC4
+#define IR_RX_LAT                  LATCbits.LATC4
+#define IR_RX_PORT                 PORTCbits.RC4
+#define IR_RX_ANS                  ANSELCbits.ANSC4
+#define IR_RX_SetHigh()            do { LATCbits.LATC4 = 1; } while(0)
+#define IR_RX_SetLow()             do { LATCbits.LATC4 = 0; } while(0)
+#define IR_RX_Toggle()             do { LATCbits.LATC4 = ~LATCbits.LATC4; } while(0)
+#define IR_RX_GetValue()           PORTCbits.RC4
+#define IR_RX_SetDigitalInput()    do { TRISCbits.TRISC4 = 1; } while(0)
+#define IR_RX_SetDigitalOutput()   do { TRISCbits.TRISC4 = 0; } while(0)
+#define IR_RX_SetAnalogMode()      do { ANSELCbits.ANSC4 = 1; } while(0)
+#define IR_RX_SetDigitalMode()     do { ANSELCbits.ANSC4 = 0; } while(0)
 
 // get/set ROW_1 aliases
 #define ROW_1_TRIS                 TRISCbits.TRISC5

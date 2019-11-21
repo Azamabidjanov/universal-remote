@@ -54,7 +54,6 @@ const char TEST_BUTTONS[BUTTON_ROWS][BUTTON_COLUMNS] =
 //Functions
 uint16_t pulse_Duration_In_Micro_Seconds(uint16_t pulse_Start, uint16_t pulse_End);
 uint16_t micro_Seconds_to_TMR1_Counts(uint16_t input);
-uint8_t input_Signal_Complete();
 void poll_Keypad();
 
 //Flags
@@ -62,11 +61,12 @@ uint8_t TRANSMIT_SIGNAL = 0;
 uint8_t INPUT_SIGNAL_AQUIRED = 0;
 uint8_t INPUT_SIGNAL_COMPLETE = 1;
 uint8_t RECORD_IR_SIGNAL = 0;
+uint8_t noChangeCount = 0;  
 
 //ISR Declarations
 void my_TMR0_ISR(void);
 void my_TMR1_ISR(void);
-
+void my_TMR3_ISR(void);
 //----------------------------------------------
 // Main "function"
 //----------------------------------------------
@@ -75,6 +75,8 @@ void main(void)
     //Variables
     char cmd;
     uint8_t i;
+    uint8_t data_prev = 255;
+    uint8_t data_cur = 255;
     
     // Initialize the device
     SYSTEM_Initialize();
@@ -92,6 +94,7 @@ void main(void)
     
     TMR0_SetInterruptHandler(my_TMR0_ISR);
     TMR1_SetInterruptHandler(my_TMR1_ISR);
+    TMR3_SetInterruptHandler(my_TMR3_ISR);
     
     // Enable the Global Interrupts
     INTERRUPT_GlobalInterruptEnable();
@@ -123,6 +126,7 @@ void main(void)
                     printf("Z: Reset processor\r\n");                     
                     printf("z: Clear the terminal\r\n"); 
                     printf("R: Record IR transmission into buffer\r\n");
+                    printf("P: Print the contents of IR Buffer\r\n");
                     printf("T: Transmit IR buffer.\r\n");
                     printf("K: Test the keypad.\r\n");
                     //TODO: Print additional menu options once finished.
@@ -151,6 +155,13 @@ void main(void)
                     for (i=0; i<40; i++) printf("\n");                            
                     break; 
             
+                case 'P':
+                    printf("We have %d number of pulses\r\n",IR_SIGNAL_BUFFER[LENGTH]);
+
+                    for(i = 1; i<IR_SIGNAL_BUFFER[LENGTH];i++){
+                        printf("Duration of pulse %d is: %d us\r\n",i,IR_SIGNAL_BUFFER[i]);
+                    } 
+                    break;
                 //--------------------------------------------
                 //Record IR input
                 //--------------------------------------------
@@ -161,16 +172,43 @@ void main(void)
                     while(!EUSART1_DataReady);
                     (void) EUSART1_Read();
                     
+                    data_cur = 255;
+                    data_prev = 255;
                     INPUT_SIGNAL_AQUIRED = 0;   //Make sure we only start storing values once we have a full pulse.
+                    IR_SIGNAL_BUFFER[0] = 1;
                     
-                    IR_SIGNAL_BUFFER[0] = 1;    //Set the number of included elements in the IR string to 0.
+                    noChangeCount = 0;
+                    while(noChangeCount < 20){
                     
-                    INPUT_SIGNAL_COMPLETE = 0;  //Set the flag to say we aren't done recording.
-                    
-                    RECORD_IR_SIGNAL = 1;       //Tell the capture ISRs to stop ignoring input
-                    
-                    
-                    while(INPUT_SIGNAL_COMPLETE == false);
+                        data_cur = IR_RX_GetValue();
+                        //printf("data: %d\r\n", data_cur);
+                        if( data_prev == 255 ){ // We got our first sample
+                            data_prev = data_cur;
+                            continue;
+                        }
+                            
+                        if( data_prev != data_cur ){
+                            noChangeCount = 0;
+                            if( data_cur == false  ){
+                                PULSE_FALLING = TMR3_ReadTimer();
+                                if( INPUT_SIGNAL_AQUIRED == true ){
+                                    IR_SIGNAL_BUFFER[IR_SIGNAL_BUFFER[LENGTH]] = pulse_Duration_In_Micro_Seconds(PULSE_RISING, PULSE_FALLING); //Add the captured pulse length to the command.
+                                    IR_SIGNAL_BUFFER[LENGTH]++;  //Increment elements
+                                }else{
+                                    INPUT_SIGNAL_AQUIRED = true;
+                                }
+                            }else{
+                                PULSE_RISING = TMR3_ReadTimer();
+                                if( INPUT_SIGNAL_AQUIRED == true ){
+                                    IR_SIGNAL_BUFFER[IR_SIGNAL_BUFFER[LENGTH]] = pulse_Duration_In_Micro_Seconds(PULSE_FALLING, PULSE_RISING); //Add the captured pulse length to the command.
+                                    IR_SIGNAL_BUFFER[LENGTH]++;  //Increment elements
+                                }else{
+                                    INPUT_SIGNAL_AQUIRED = true;
+                                }
+                            }
+                        }
+                        data_prev = data_cur;
+                    }
                     
                     printf("IR signal captured and loaded into buffer.\r\n");
                     
@@ -184,6 +222,10 @@ void main(void)
 
                     while(!EUSART1_DataReady);
                     (void) EUSART1_Read();
+                    
+                    TRANSMIT_SIGNAL = true;
+                    
+                    while( TRANSMIT_SIGNAL == true );
                     
                     printf("Sending complete.");
                     
@@ -371,14 +413,7 @@ uint16_t micro_Seconds_to_TMR1_Counts(uint16_t input)
 void my_TMR1_ISR()
 {
     static uint16_t index = 0;   //Index for the IR buffer
-    
-    if(input_Signal_Complete() == true && RECORD_IR_SIGNAL == true)// Reset flags if recording is complete
-    {
-        INPUT_SIGNAL_COMPLETE = 1;
-        RECORD_IR_SIGNAL = 0;
-        INPUT_SIGNAL_AQUIRED = 0;
-    }
-    
+   
     //IR transmission logic
     if(TRANSMIT_SIGNAL == true) //If we're transmitting
     {
@@ -388,13 +423,13 @@ void my_TMR1_ISR()
         
         if(index < IR_SIGNAL_BUFFER[LENGTH])    //If we still have signal left to send, send it
         {
-            if(((index >> 1) & 0b0001))   //If the index is odd, we know the signal should be high
+            if(index & 0x0001)   //If the index is odd, we know the signal should be high
             {
-                EPWM2_LoadDutyValue(LED_OFF); 
+                EPWM2_LoadDutyValue(LED_ON); 
             }
             else
             {
-                EPWM2_LoadDutyValue(LED_ON); 
+                EPWM2_LoadDutyValue(LED_OFF); 
             }
   
             TMR1_WriteTimer(0x10000 - micro_Seconds_to_TMR1_Counts(IR_SIGNAL_BUFFER[index]));   //Set the timer for the pulse duration.
@@ -425,44 +460,13 @@ void my_TMR0_ISR()
     INTCONbits.TMR0IF= 0;
 }
 
-//----------------------------------------------
-// Timer 1 ISR helper function
-// Checks to see if any new pulses have been
-// recorded for a while and stops the recording
-// process if they haven't.
-//----------------------------------------------
-uint8_t input_Signal_Complete()
-{
-    static uint16_t past_values[4] = {0,0,0,0};
-    static uint8_t checks = 0;
+void my_TMR3_ISR(){
     
-    //Cycle the values of the array
-    past_values[0] = IR_SIGNAL_BUFFER[0];
-    past_values[1] = past_values[0];
-    past_values[2] = past_values[1];
-    past_values[3] = past_values[2];
-    
-    if(INPUT_SIGNAL_AQUIRED == false) //Reset for a new signal, if we haven't got our first pulse yet
-    {
-        checks = 0;
-        past_values[0] = 0;
-        past_values[1] = 0;
-        past_values[2] = 0;
-        past_values[3] = 0;
-        return false;
+    if( INPUT_SIGNAL_AQUIRED == true){
+        noChangeCount++;
     }
-    else if(checks == 4) //Enough samples collected to make a judgment
-    {
-        if(past_values[0] == past_values[3]) //If no new pulses collected, assume it's done.
-        {
-            return true;
-        }
-    }
-    else //Need more samples
-    {
-        checks++;
-        return false;
-    }
+    TMR3_WriteTimer(0x0000);
+    PIR2bits.TMR3IF = 0;
 }
 
 /**

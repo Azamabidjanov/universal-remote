@@ -25,7 +25,7 @@
 #define STOP_BIT        0x0000
 #define PAUSE_BIT       0xFFFF
 #define BLOCK_SIZE      512
-#define LED_ON          30 
+#define LED_ON          25 
 #define LED_OFF         0
 #define LENGTH          0
 #define BUTTON_ROWS     4
@@ -77,7 +77,7 @@ void main(void)
 {
     //Variables
     char cmd;
-    uint8_t i;
+    uint16_t i;
     uint8_t data_prev = 255;
     uint8_t data_cur = 255;
     
@@ -181,7 +181,7 @@ void main(void)
                     IR_SIGNAL_BUFFER[0] = 1;
                     
                     noChangeCount = 0;
-                    while(noChangeCount < 20){
+                    while(noChangeCount < 20 && IR_SIGNAL_BUFFER[LENGTH] < (BLOCK_SIZE/2 - 1) ){
                     
                         data_cur = IR_RX_GetValue();
                         //printf("data: %d\r\n", data_cur);
@@ -223,6 +223,7 @@ void main(void)
                 case 'T':
                     printf("Press any key to start transmitting IR signal.\r\n");
 
+
                     while(!EUSART1_DataReady);
                     (void) EUSART1_Read();
                     
@@ -230,7 +231,8 @@ void main(void)
                     
                     while( TRANSMIT_SIGNAL == true );
                     
-                    printf("Sending complete.");
+                    printf("Sending complete.\n\r");
+   
                     
                     break;
                     
@@ -461,6 +463,7 @@ void my_TMR1_ISR()
         else    //else, stop sending
         {
             TRANSMIT_SIGNAL = false;
+            index = 0;
         }
     }
     else

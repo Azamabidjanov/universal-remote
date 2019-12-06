@@ -115,14 +115,6 @@
 #define COLUMN_3_SetDigitalInput()    do { TRISAbits.TRISA6 = 1; } while(0)
 #define COLUMN_3_SetDigitalOutput()   do { TRISAbits.TRISA6 = 0; } while(0)
 
-// get/set RC1 procedures
-#define RC1_SetHigh()            do { LATCbits.LATC1 = 1; } while(0)
-#define RC1_SetLow()             do { LATCbits.LATC1 = 0; } while(0)
-#define RC1_Toggle()             do { LATCbits.LATC1 = ~LATCbits.LATC1; } while(0)
-#define RC1_GetValue()              PORTCbits.RC1
-#define RC1_SetDigitalInput()    do { TRISCbits.TRISC1 = 1; } while(0)
-#define RC1_SetDigitalOutput()   do { TRISCbits.TRISC1 = 0; } while(0)
-
 // get/set COLUMN_0 aliases
 #define COLUMN_0_TRIS                 TRISCbits.TRISC2
 #define COLUMN_0_LAT                  LATCbits.LATC2

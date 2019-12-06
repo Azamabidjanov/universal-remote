@@ -25,12 +25,15 @@
 #define STOP_BIT        0x0000
 #define PAUSE_BIT       0xFFFF
 #define BLOCK_SIZE      512
-#define LED_ON          25 
+#define LED_ON          30 
 #define LED_OFF         0
 #define LENGTH          0
 #define BUTTON_ROWS     4
 #define BUTTON_COLUMNS  3
 #define TMR0_1_MS       1600
+/*Quote from INLAB 6: the IR LED will blink at 38KHz. When the IR decoder "sees" this, it's output will go to logic 0.*/
+#define IR_RX_LED_HIGH      0
+#define IR_RX_LED_LOW       1
 
 //Global Variables
 uint16_t IR_SIGNAL_BUFFER[BLOCK_SIZE/2]; //Composition: length, first high pulse duration, first low pulse duration, second high pulse duration...
@@ -189,7 +192,7 @@ void main(void)
                             
                         if( data_prev != data_cur ){
                             noChangeCount = 0;
-                            if( data_cur == false  ){
+                            if( data_cur == IR_RX_LED_LOW  ){
                                 PULSE_FALLING = TMR3_ReadTimer();
                                 if( INPUT_SIGNAL_AQUIRED == true ){
                                     IR_SIGNAL_BUFFER[IR_SIGNAL_BUFFER[LENGTH]] = pulse_Duration_In_Micro_Seconds(PULSE_RISING, PULSE_FALLING); //Add the captured pulse length to the command.

@@ -115,6 +115,74 @@
 #define COLUMN_3_SetDigitalInput()    do { TRISAbits.TRISA6 = 1; } while(0)
 #define COLUMN_3_SetDigitalOutput()   do { TRISAbits.TRISA6 = 0; } while(0)
 
+// get/set SCK2 aliases
+#define SCK2_TRIS                 TRISBbits.TRISB1
+#define SCK2_LAT                  LATBbits.LATB1
+#define SCK2_PORT                 PORTBbits.RB1
+#define SCK2_WPU                  WPUBbits.WPUB1
+#define SCK2_ANS                  ANSELBbits.ANSB1
+#define SCK2_SetHigh()            do { LATBbits.LATB1 = 1; } while(0)
+#define SCK2_SetLow()             do { LATBbits.LATB1 = 0; } while(0)
+#define SCK2_Toggle()             do { LATBbits.LATB1 = ~LATBbits.LATB1; } while(0)
+#define SCK2_GetValue()           PORTBbits.RB1
+#define SCK2_SetDigitalInput()    do { TRISBbits.TRISB1 = 1; } while(0)
+#define SCK2_SetDigitalOutput()   do { TRISBbits.TRISB1 = 0; } while(0)
+#define SCK2_SetPullup()          do { WPUBbits.WPUB1 = 1; } while(0)
+#define SCK2_ResetPullup()        do { WPUBbits.WPUB1 = 0; } while(0)
+#define SCK2_SetAnalogMode()      do { ANSELBbits.ANSB1 = 1; } while(0)
+#define SCK2_SetDigitalMode()     do { ANSELBbits.ANSB1 = 0; } while(0)
+
+// get/set SDI2 aliases
+#define SDI2_TRIS                 TRISBbits.TRISB2
+#define SDI2_LAT                  LATBbits.LATB2
+#define SDI2_PORT                 PORTBbits.RB2
+#define SDI2_WPU                  WPUBbits.WPUB2
+#define SDI2_ANS                  ANSELBbits.ANSB2
+#define SDI2_SetHigh()            do { LATBbits.LATB2 = 1; } while(0)
+#define SDI2_SetLow()             do { LATBbits.LATB2 = 0; } while(0)
+#define SDI2_Toggle()             do { LATBbits.LATB2 = ~LATBbits.LATB2; } while(0)
+#define SDI2_GetValue()           PORTBbits.RB2
+#define SDI2_SetDigitalInput()    do { TRISBbits.TRISB2 = 1; } while(0)
+#define SDI2_SetDigitalOutput()   do { TRISBbits.TRISB2 = 0; } while(0)
+#define SDI2_SetPullup()          do { WPUBbits.WPUB2 = 1; } while(0)
+#define SDI2_ResetPullup()        do { WPUBbits.WPUB2 = 0; } while(0)
+#define SDI2_SetAnalogMode()      do { ANSELBbits.ANSB2 = 1; } while(0)
+#define SDI2_SetDigitalMode()     do { ANSELBbits.ANSB2 = 0; } while(0)
+
+// get/set SDO2 aliases
+#define SDO2_TRIS                 TRISBbits.TRISB3
+#define SDO2_LAT                  LATBbits.LATB3
+#define SDO2_PORT                 PORTBbits.RB3
+#define SDO2_WPU                  WPUBbits.WPUB3
+#define SDO2_ANS                  ANSELBbits.ANSB3
+#define SDO2_SetHigh()            do { LATBbits.LATB3 = 1; } while(0)
+#define SDO2_SetLow()             do { LATBbits.LATB3 = 0; } while(0)
+#define SDO2_Toggle()             do { LATBbits.LATB3 = ~LATBbits.LATB3; } while(0)
+#define SDO2_GetValue()           PORTBbits.RB3
+#define SDO2_SetDigitalInput()    do { TRISBbits.TRISB3 = 1; } while(0)
+#define SDO2_SetDigitalOutput()   do { TRISBbits.TRISB3 = 0; } while(0)
+#define SDO2_SetPullup()          do { WPUBbits.WPUB3 = 1; } while(0)
+#define SDO2_ResetPullup()        do { WPUBbits.WPUB3 = 0; } while(0)
+#define SDO2_SetAnalogMode()      do { ANSELBbits.ANSB3 = 1; } while(0)
+#define SDO2_SetDigitalMode()     do { ANSELBbits.ANSB3 = 0; } while(0)
+
+// get/set CS aliases
+#define CS_TRIS                 TRISBbits.TRISB4
+#define CS_LAT                  LATBbits.LATB4
+#define CS_PORT                 PORTBbits.RB4
+#define CS_WPU                  WPUBbits.WPUB4
+#define CS_ANS                  ANSELBbits.ANSB4
+#define CS_SetHigh()            do { LATBbits.LATB4 = 1; } while(0)
+#define CS_SetLow()             do { LATBbits.LATB4 = 0; } while(0)
+#define CS_Toggle()             do { LATBbits.LATB4 = ~LATBbits.LATB4; } while(0)
+#define CS_GetValue()           PORTBbits.RB4
+#define CS_SetDigitalInput()    do { TRISBbits.TRISB4 = 1; } while(0)
+#define CS_SetDigitalOutput()   do { TRISBbits.TRISB4 = 0; } while(0)
+#define CS_SetPullup()          do { WPUBbits.WPUB4 = 1; } while(0)
+#define CS_ResetPullup()        do { WPUBbits.WPUB4 = 0; } while(0)
+#define CS_SetAnalogMode()      do { ANSELBbits.ANSB4 = 1; } while(0)
+#define CS_SetDigitalMode()     do { ANSELBbits.ANSB4 = 0; } while(0)
+
 // get/set COLUMN_0 aliases
 #define COLUMN_0_TRIS                 TRISCbits.TRISC2
 #define COLUMN_0_LAT                  LATCbits.LATC2

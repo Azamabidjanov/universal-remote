@@ -18,8 +18,9 @@
 //- Board.
 //------------------------------------------------------------------------
 
+//Libraries
 #include "mcc_generated_files/mcc.h"
-
+#include "sdCard.h"
 
 //Definitions
 #define STOP_BIT        0x0000
@@ -58,6 +59,7 @@ const char TEST_BUTTONS[BUTTON_ROWS][BUTTON_COLUMNS] =
 uint16_t pulse_Duration_In_Micro_Seconds(uint16_t pulse_Start, uint16_t pulse_End);
 uint16_t micro_Seconds_to_TMR1_Counts(uint16_t input);
 void poll_Keypad();
+uint32_t generate_Address(char key);
 
 //Flags
 uint8_t TRANSMIT_SIGNAL = 0;
@@ -65,6 +67,7 @@ uint8_t INPUT_SIGNAL_AQUIRED = 0;
 uint8_t INPUT_SIGNAL_COMPLETE = 1;
 uint8_t RECORD_IR_SIGNAL = 0;
 uint8_t noChangeCount = 0;  
+uint8_t HEADLESS_RUNNING = 1;
 
 //ISR Declarations
 void my_TMR0_ISR(void);
@@ -110,6 +113,11 @@ void main(void)
     printf("Reset complete.\r\n");
     //TODO: Output board configuration.
     
+    //Get the SD Card ready
+    SDCARD_Initialize(true);
+    
+    //Disable headless running (temporary)
+    HEADLESS_RUNNING = 0;
 
     while(true)
     {
@@ -276,6 +284,26 @@ void main(void)
         
     }
 }
+
+//----------------------------------------------
+// Function to map an SD card address to a
+// a keypad input
+//----------------------------------------------
+uint32_t generate_Address(char key)
+{
+    uint32_t result = 0;
+    
+    //TODO: Figure out how this will work
+    
+    /* //Here's an option
+     result = (key - '#')*BLOCK_SIZE;
+     */
+    
+    
+    return result;
+    
+}
+
 
 //----------------------------------------------
 // Function to determine which keys are pressed
@@ -482,6 +510,21 @@ void my_TMR0_ISR()
 {
     poll_Keypad();
     
+    if(HEADLESS_RUNNING)
+    {
+        //Check if any buttons were pressed, and send the stored command if they did.
+        for(uint8_t i = 0;i < BUTTON_ROWS; i++)
+        {
+            for(uint8_t j = 0;j < BUTTON_COLUMNS;j++)
+            {
+                if(PRESSED_BUTTONS[i][j] == TEST_BUTTONS[i][j])
+                {
+                    SDCARD_ReadBlock(generate_Address(TEST_BUTTONS[i][j]),IR_SIGNAL_BUFFER);
+                    TRANSMIT_SIGNAL = true;
+                }
+            }
+        }
+    }
     TMR0_WriteTimer(0xFFFF - TMR0_1_MS);
     
     INTCONbits.TMR0IF= 0;

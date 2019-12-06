@@ -52,11 +52,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "interrupt_manager.h"
-#include "epwm2.h"
+#include "spi2.h"
 #include "tmr3.h"
 #include "tmr1.h"
 #include "tmr2.h"
 #include "tmr0.h"
+#include "epwm2.h"
 #include "eusart1.h"
 
 

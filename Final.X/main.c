@@ -18,6 +18,31 @@
 //- Board.
 //------------------------------------------------------------------------
 
+/*
+ * Understanding the SD card structure:
+ * 
+ * Address: 0
+ * This address block has the number of codes stored for each key. This can be
+ * converted to the address of the last stored code thusly: 
+ * ([NUMBER ASSOCIATED WITH THE KEY] + [NUMBER OF CODES STORED FOR THIS BUTTON]*12 + 24)*[BLOCK_SIZE]
+ * 
+ * Address: 1*512 - 24*512
+ * These store the codes associaded with each key and a corrisponding array
+ * that has 4 character human readable codes associated with the signals
+ * 
+ * Example:
+ * Address: 1*512 -> [v+LG, v+SB, v+SS]
+ * Address: 2*512 -> [ 25*512, 49*512, 73*512]
+ * 
+ * 
+ * Address: 25*512+
+ * These store the actual codes for the keys, spaced 12 blocks apart, such that
+ * the first code for the first key will be stored just before the first code
+ * for the second key and so on.
+ */
+
+
+
 //Libraries
 #include "mcc_generated_files/mcc.h"
 #include "sdCard.h"
@@ -38,6 +63,9 @@
 
 //Global Variables
 uint16_t IR_SIGNAL_BUFFER[BLOCK_SIZE/2]; //Composition: length, first high pulse duration, first low pulse duration, second high pulse duration...
+uint32_t ADDRESS_BUFFER[BLOCK_SIZE/4];   //Composition: length, address of first command, address of second command...
+uint32_t STATUS_BUFFER[BLOCK_SIZE/4];    //Composition: Current location to store commands for 1st button, current location to store commands for 2st button...
+uint32_t INFO_BUFFER[BLOCK_SIZE/4];      //Composition: length, 4 character numonics for the codes
 uint16_t PULSE_RISING = 0;
 uint16_t PULSE_FALLING = 0;
 char PRESSED_BUTTONS[BUTTON_ROWS][BUTTON_COLUMNS] = 
@@ -59,7 +87,8 @@ const char TEST_BUTTONS[BUTTON_ROWS][BUTTON_COLUMNS] =
 uint16_t pulse_Duration_In_Micro_Seconds(uint16_t pulse_Start, uint16_t pulse_End);
 uint16_t micro_Seconds_to_TMR1_Counts(uint16_t input);
 void poll_Keypad();
-uint32_t generate_Address(char key);
+uint32_t generate_Address(char key, uint16_t entry);
+uint32_t count_Key(char key);
 
 //Flags
 uint8_t TRANSMIT_SIGNAL = 0;
@@ -118,6 +147,9 @@ void main(void)
     
     //Disable headless running (temporary)
     HEADLESS_RUNNING = 0;
+    
+    //Get the information for where to put new codes
+    SDCARD_ReadBlock(0 ,STATUS_BUFFER);
 
     while(true)
     {
@@ -140,7 +172,8 @@ void main(void)
                     printf("P: Print the contents of IR Buffer\r\n");
                     printf("T: Transmit IR buffer.\r\n");
                     printf("K: Test the keypad.\r\n");
-                    //TODO: Print additional menu options once finished.
+                    //TODO: Make a reset option to full reset the remote
+                    //TODO: Make a way to edit remote commands.
                     printf("\r\n-------------------------------------------------\r\n");
                     break;
                     
@@ -221,6 +254,12 @@ void main(void)
                         data_prev = data_cur;
                     }
                     
+                    //TODO: Save code to SD card in the correct place
+                    
+                    //TODO: Add something to request a 4 character pnumonic to associate with the code
+                    
+                    //TODO: Add logic to ask the user to put in additional codes
+                    
                     printf("IR signal captured and loaded into buffer.\r\n");
                     
                     break;
@@ -229,6 +268,8 @@ void main(void)
                 //Send IR buffer
                 //--------------------------------------------
                 case 'T':
+                    //TODO: change how this works to work with the SD CARD.
+                    
                     printf("Press any key to start transmitting IR signal.\r\n");
 
 
@@ -286,24 +327,82 @@ void main(void)
 }
 
 //----------------------------------------------
-// Function to map an SD card address to a
-// a keypad input
+// Function to transition the key to a number
 //----------------------------------------------
-uint32_t generate_Address(char key)
+uint32_t count_Key(char key)
 {
     uint32_t result = 0;
     
-    //TODO: Figure out how this will work
+    switch(key)
+    {
+        case '*':
+            result = 1;
+            break; 
+            
+        case '0':
+            result = 2;
+            break;    
+        
+        case '#':
+            result = 3;
+            break; 
+            
+        case '7':
+            result = 4;
+            break; 
+        
+        case '8':
+            result = 5;
+            break; 
+            
+        case '9':
+            result = 6;
+            break; 
+        
+        case '4':
+            result = 7;
+            break; 
+            
+        case '5':
+            result = 8;
+            break; 
+            
+        case '6':
+            result = 9;
+            break; 
+            
+        case '1':
+            result = 10;
+            break; 
+            
+        case '2':
+            result = 11;
+            break; 
+            
+        case '3':
+            result = 12;
+            break; 
+             
+    }
+
     
-    /* //Here's an option
-     result = (key - '#')*BLOCK_SIZE;
-     */
+    return result;
+}
+
+
+//----------------------------------------------
+// Function to map an SD card address to a
+// a keypad input
+//----------------------------------------------
+uint32_t generate_Address(char key, uint32_t entry)
+{
+    uint32_t result = 0;
+    
+    result = ((count_Key(key)) + 12*(entry) + 24)*BLOCK_SIZE;
     
     
     return result;
-    
 }
-
 
 //----------------------------------------------
 // Function to determine which keys are pressed
@@ -466,16 +565,17 @@ uint16_t micro_Seconds_to_TMR1_Counts(uint16_t input)
 //----------------------------------------------
 void my_TMR1_ISR()
 {
-    static uint16_t index = 0;   //Index for the IR buffer
-   
+    static uint16_t index_signal = 0;   //Index for the IR buffer
+    static uint16_t index_address = 1;   //Index for the IR code list
+    
     //IR transmission logic
     if(TRANSMIT_SIGNAL == true) //If we're transmitting
     {
-        index++;
+        index_signal++;
         
         //TODO: Add logic to handle pause and stop bits in the ISR
         
-        if(index < IR_SIGNAL_BUFFER[LENGTH])    //If we still have signal left to send, send it
+        if(index_signal < IR_SIGNAL_BUFFER[LENGTH])    //If we still have signal left to send, send it
         {
             if(index & 0x0001)   //If the index is odd, we know the signal should be high
             {
@@ -488,15 +588,24 @@ void my_TMR1_ISR()
   
             TMR1_WriteTimer(0x10000 - micro_Seconds_to_TMR1_Counts(IR_SIGNAL_BUFFER[index]));   //Set the timer for the pulse duration.
         }
+        else if((index_address + 1) < ADDRESS_BUFFER[LENGTH]) //If we have more codes to send
+        {
+            index_address++;
+            
+            //TODO: find a way to delay the signal sending.
+            
+            SDCARD_ReadBlock(ADDRESS_BUFFER[index_address], IR_SIGNAL_BUFFER); //Get the next code ready to send
+        }
         else    //else, stop sending
         {
             TRANSMIT_SIGNAL = false;
-            index = 0;
+            index_signal = 0;
+            index_address = 1;
         }
     }
     else
     {
-        index = 0;
+        index_signal = 0;
     }
     
     PIR1bits.TMR1IF= 0; 
@@ -508,6 +617,8 @@ void my_TMR1_ISR()
 //----------------------------------------------
 void my_TMR0_ISR()
 {
+    uint8_t escape_flag = 0;
+    
     poll_Keypad();
     
     if(HEADLESS_RUNNING)
@@ -515,16 +626,30 @@ void my_TMR0_ISR()
         //Check if any buttons were pressed, and send the stored command if they did.
         for(uint8_t i = 0;i < BUTTON_ROWS; i++)
         {
+            if(escape_flag) break;
+            
             for(uint8_t j = 0;j < BUTTON_COLUMNS;j++)
             {
+                if(escape_flag) break;
+                
                 if(PRESSED_BUTTONS[i][j] == TEST_BUTTONS[i][j])
                 {
-                    SDCARD_ReadBlock(generate_Address(TEST_BUTTONS[i][j]),IR_SIGNAL_BUFFER);
+                    escape_flag = 1; //We found a button press so stop looking.
+                  
+                    SDCARD_ReadBlock(count_Key(TEST_BUTTONS[i][j])*BLOCK_SIZE*2, ADDRESS_BUFFER); //Get the list of addresses where the codes are stored
+                    
+                    SDCARD_ReadBlock(ADDRESS_BUFFER[1], IR_SIGNAL_BUFFER);  // Get the first code ready to transmit.
+                    
                     TRANSMIT_SIGNAL = true;
+                    
+                    
                 }
             }
         }
     }
+    
+    escape_flag = 0;
+    
     TMR0_WriteTimer(0xFFFF - TMR0_1_MS);
     
     INTCONbits.TMR0IF= 0;

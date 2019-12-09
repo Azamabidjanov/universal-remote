@@ -577,7 +577,7 @@ void my_TMR1_ISR()
         
         if(index_signal < IR_SIGNAL_BUFFER[LENGTH])    //If we still have signal left to send, send it
         {
-            if(index & 0x0001)   //If the index is odd, we know the signal should be high
+            if(index_signal & 0x0001)   //If the index is odd, we know the signal should be high
             {
                 EPWM2_LoadDutyValue(LED_ON); 
             }
@@ -586,7 +586,7 @@ void my_TMR1_ISR()
                 EPWM2_LoadDutyValue(LED_OFF); 
             }
   
-            TMR1_WriteTimer(0x10000 - micro_Seconds_to_TMR1_Counts(IR_SIGNAL_BUFFER[index]));   //Set the timer for the pulse duration.
+            TMR1_WriteTimer(0x10000 - micro_Seconds_to_TMR1_Counts(IR_SIGNAL_BUFFER[index_signal]));   //Set the timer for the pulse duration.
         }
         else if((index_address + 1) < ADDRESS_BUFFER[LENGTH]) //If we have more codes to send
         {

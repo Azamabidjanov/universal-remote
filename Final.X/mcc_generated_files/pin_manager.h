@@ -183,6 +183,17 @@
 #define CS_SetAnalogMode()      do { ANSELBbits.ANSB4 = 1; } while(0)
 #define CS_SetDigitalMode()     do { ANSELBbits.ANSB4 = 0; } while(0)
 
+// get/set IR_TX aliases
+#define IR_TX_TRIS                 TRISCbits.TRISC1
+#define IR_TX_LAT                  LATCbits.LATC1
+#define IR_TX_PORT                 PORTCbits.RC1
+#define IR_TX_SetHigh()            do { LATCbits.LATC1 = 1; } while(0)
+#define IR_TX_SetLow()             do { LATCbits.LATC1 = 0; } while(0)
+#define IR_TX_Toggle()             do { LATCbits.LATC1 = ~LATCbits.LATC1; } while(0)
+#define IR_TX_GetValue()           PORTCbits.RC1
+#define IR_TX_SetDigitalInput()    do { TRISCbits.TRISC1 = 1; } while(0)
+#define IR_TX_SetDigitalOutput()   do { TRISCbits.TRISC1 = 0; } while(0)
+
 // get/set COLUMN_0 aliases
 #define COLUMN_0_TRIS                 TRISCbits.TRISC2
 #define COLUMN_0_LAT                  LATCbits.LATC2

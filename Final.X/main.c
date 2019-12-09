@@ -51,7 +51,7 @@
 #define STOP_BIT        0x0000
 #define PAUSE_BIT       0xFFFF
 #define BLOCK_SIZE      512
-#define LED_ON          25 
+#define LED_ON          1 
 #define LED_OFF         0
 #define LENGTH          0
 #define BUTTON_ROWS     4
@@ -71,6 +71,7 @@ uint32_t STATUS_BUFFER[BLOCK_SIZE/4];    //Composition: Current location to stor
 uint32_t INFO_BUFFER[BLOCK_SIZE/4];      //Composition: length, 4 character numonics for the codes
 uint16_t PULSE_RISING = 0;
 uint16_t PULSE_FALLING = 0;
+uint8_t DUTY = 0;
 char PRESSED_BUTTONS[BUTTON_ROWS][BUTTON_COLUMNS] = 
 {
     {'\0', '\0', '\0'}, 
@@ -110,6 +111,7 @@ uint8_t HEADLESS_RUNNING = 1;
 void my_TMR0_ISR(void);
 void my_TMR1_ISR(void);
 void my_TMR3_ISR(void);
+void my_TMR4_ISR(void);
 //----------------------------------------------
 // Main "function"
 //----------------------------------------------
@@ -139,6 +141,7 @@ void main(void)
     TMR0_SetInterruptHandler(my_TMR0_ISR);
     TMR1_SetInterruptHandler(my_TMR1_ISR);
     TMR3_SetInterruptHandler(my_TMR3_ISR);
+    TMR4_SetInterruptHandler(my_TMR4_ISR);
     
     // Enable the Global Interrupts
     INTERRUPT_GlobalInterruptEnable();
@@ -147,7 +150,8 @@ void main(void)
     INTERRUPT_PeripheralInterruptEnable();
     
     //Turn off LED
-    EPWM2_LoadDutyValue(LED_OFF); 
+    DUTY = LED_OFF;
+    //EPWM2_LoadDutyValue(LED_OFF); 
     printf("Reset complete.\r\n");
     //TODO: Output board configuration.
     
@@ -573,12 +577,14 @@ void main(void)
                  
                 case '+':
                     printf("LED ON\r\n");
-                   EPWM2_LoadDutyValue(LED_ON); 
+                   //EPWM2_LoadDutyValue(LED_ON);
+                    DUTY = LED_ON;
                    break;
                
                case '-':
                    printf("LED OFF\r\n");
-                   EPWM2_LoadDutyValue(LED_OFF); 
+                   //EPWM2_LoadDutyValue(LED_OFF); 
+                   DUTY = LED_OFF;
                    break;
                  
                 case 'S':
@@ -1011,11 +1017,13 @@ void my_TMR1_ISR()
             //printf("transmit\r\n");
             if(index_signal & 0x0001)   //If the index is odd, we know the signal should be high
             {
-                EPWM2_LoadDutyValue(LED_ON); 
+                DUTY = LED_ON;
+                //EPWM2_LoadDutyValue(LED_ON); 
             }
             else
             {
-                EPWM2_LoadDutyValue(LED_OFF); 
+                DUTY = LED_OFF;
+                //EPWM2_LoadDutyValue(LED_OFF); 
             }
   
             TMR1_WriteTimer(0x10000 - micro_Seconds_to_TMR1_Counts(IR_SIGNAL_BUFFER[index_signal]));   //Set the timer for the pulse duration.
@@ -1101,6 +1109,28 @@ void my_TMR3_ISR(){
     PIR2bits.TMR3IF = 0;
 }
 
+void my_TMR4_ISR()
+{
+    static uint8_t duty_Tracker = 0;
+    
+    duty_Tracker++;
+    
+    
+    if(duty_Tracker < DUTY)
+    {
+        IR_RX_SetHigh();
+    }
+    else
+    {
+        IR_RX_SetLow();
+    }
+    
+    duty_Tracker = duty_Tracker % 10;
+   
+    
+    TMR4_WriteTimer(0xFFFF - 42);
+    PIR5bits.TMR4IF = 0;
+}
 /**
  End of File
 */

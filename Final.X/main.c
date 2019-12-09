@@ -62,6 +62,9 @@
 #define IR_RX_LED_LOW       1
 
 //Global Variables
+
+uint8_t BUFFER[BLOCK_SIZE];
+uint32_t NAME_BUFFER[BLOCK_SIZE/4];
 uint16_t IR_SIGNAL_BUFFER[BLOCK_SIZE/2]; //Composition: length, first high pulse duration, first low pulse duration, second high pulse duration...
 uint32_t ADDRESS_BUFFER[BLOCK_SIZE/4];   //Composition: length, address of first command, address of second command...
 uint32_t STATUS_BUFFER[BLOCK_SIZE/4];    //Composition: Current location to store commands for 1st button, current location to store commands for 2st button...
@@ -87,8 +90,13 @@ const char TEST_BUTTONS[BUTTON_ROWS][BUTTON_COLUMNS] =
 uint16_t pulse_Duration_In_Micro_Seconds(uint16_t pulse_Start, uint16_t pulse_End);
 uint16_t micro_Seconds_to_TMR1_Counts(uint16_t input);
 void poll_Keypad();
-uint32_t generate_Address(char key, uint16_t entry);
+uint32_t generate_Address(char key, uint32_t entry);
 uint32_t count_Key(char key);
+void byteToWord( uint8_t buffer[], uint32_t wordBuffer[] );
+void byteToHalfWord( uint8_t buffer[], uint16_t halfWordBuffer[] );
+void wordToByte( uint8_t buffer[], uint32_t wordBuffer[] );
+void halfWordToByte( uint8_t buffer[], uint16_t halfWordBuffer[] );
+
 
 //Flags
 uint8_t TRANSMIT_SIGNAL = 0;
@@ -109,6 +117,7 @@ void main(void)
 {
     //Variables
     char cmd;
+    uint8_t     status;
     uint16_t i;
     uint8_t data_prev = 255;
     uint8_t data_cur = 255;
@@ -149,7 +158,8 @@ void main(void)
     HEADLESS_RUNNING = 0;
     
     //Get the information for where to put new codes
-    SDCARD_ReadBlock(0 ,STATUS_BUFFER);
+    SDCARD_ReadBlock(0, BUFFER);
+    byteToWord( BUFFER, STATUS_BUFFER );
 
     while(true)
     {
@@ -172,6 +182,8 @@ void main(void)
                     printf("P: Print the contents of IR Buffer\r\n");
                     printf("T: Transmit IR buffer.\r\n");
                     printf("K: Test the keypad.\r\n");
+                    printf("S: Test\r\n");
+                    printf("X: LED Test\r\n");
                     //TODO: Make a reset option to full reset the remote
                     //TODO: Make a way to edit remote commands.
                     printf("\r\n-------------------------------------------------\r\n");
@@ -200,12 +212,67 @@ void main(void)
                     break; 
             
                 case 'P':
-                    printf("We have %d number of pulses\r\n",IR_SIGNAL_BUFFER[LENGTH]);
+                {
+                    
+                    printf("Print a key on the Keypad to print contents from SD Card\r\n");
+                    uint8_t pressed = false;
+                    char key;
+                    
+                    while( !pressed ){
+                        for(uint8_t i = 0;i < BUTTON_ROWS; i++)
+                        {
+                            for(uint8_t j = 0;j < BUTTON_COLUMNS;j++)
+                            {
+                                if(PRESSED_BUTTONS[i][j] == TEST_BUTTONS[i][j])
+                                {
+                                    pressed = true;
+                                    key = PRESSED_BUTTONS[i][j];
+                                }
+                            }
+                        }
+                    }
+                    printf("Getting contents of %c key\r\n", key);
+                    
+                    uint32_t keyAddress = ((count_Key( key ) * 2) - 1)* 512;
+                    SDCARD_ReadBlock(keyAddress, BUFFER); //Get the next code ready to send
+                    byteToWord( BUFFER, INFO_BUFFER );    
+                    
+                    printf("Size of the INFO_BUFFER: %d\r\n", INFO_BUFFER[LENGTH]);
+                    
+                    for(uint8_t i = 0; i < INFO_BUFFER[LENGTH]; i++){
+                        char buf[5];
+                        uint32_t name_t = INFO_BUFFER[i+1];
+                        buf[0] = name_t >> 24;
+                        buf[1] = name_t >> 16;
+                        buf[2] = name_t >> 8;
+                        buf[3] = name_t;
+                        buf[4] = '\0';
+                        
+                        printf("Command: %d  Name: %s\r\n", i, buf);
+                    }
+                    
+                    
+                    
+                    keyAddress = ((count_Key( key ) * 2))* 512;
+                    SDCARD_ReadBlock(keyAddress, BUFFER); //Get the next code ready to send
+                    byteToWord( BUFFER, ADDRESS_BUFFER );    
+                    
+                    printf("Size of the ADDRESS_BUFFER: %d\r\n", ADDRESS_BUFFER[LENGTH]);
+                    
+                    for(uint8_t i = 0; i < ADDRESS_BUFFER[LENGTH]; i++){
+                 
+                        printf("Command: %d  Address: ", i);
+                        printf("%04x", ADDRESS_BUFFER[i+1]>>16); printf(":");  printf("%04x",ADDRESS_BUFFER[i+1]&0X0000FFFF);    printf("\r\n");
+                        
+                    }
+                            
 
+                    printf("We have %d number of pulses\r\n",IR_SIGNAL_BUFFER[LENGTH]);
                     for(i = 1; i<IR_SIGNAL_BUFFER[LENGTH];i++){
                         printf("Duration of pulse %d is: %d us\r\n",i,IR_SIGNAL_BUFFER[i]);
                     } 
                     break;
+                }
                 //--------------------------------------------
                 //Record IR input
                 //--------------------------------------------
@@ -270,14 +337,16 @@ void main(void)
                 case 'T':
                     //TODO: change how this works to work with the SD CARD.
                     
-                    printf("Press any key to start transmitting IR signal.\r\n");
+                    printf("Entering Transmission Mode. Press any key on the terminal to quit..\r\n");
 
-
-                    while(!EUSART1_DataReady);
-                    (void) EUSART1_Read();
+                    HEADLESS_RUNNING = true;
                     
-                    TRANSMIT_SIGNAL = true;
+//                    while(!EUSART1_DataReady);
+//                    (void) EUSART1_Read();
                     
+                    //TRANSMIT_SIGNAL = true;
+                    
+                    while( TRANSMIT_SIGNAL != true );
                     while( TRANSMIT_SIGNAL == true );
                     
                     printf("Sending complete.\n\r");
@@ -314,6 +383,283 @@ void main(void)
                     printf("Stopped watching.\r\n");
                     
                     break;
+                 case 'W':
+                 {
+                    printf("Press the you want to override: \r\n");
+                    
+                    uint8_t pressed = false;
+                    char key;
+                    
+                    while( !pressed ){
+                        for(uint8_t i = 0;i < BUTTON_ROWS; i++)
+                        {
+                            for(uint8_t j = 0;j < BUTTON_COLUMNS;j++)
+                            {
+                                if(PRESSED_BUTTONS[i][j] == TEST_BUTTONS[i][j])
+                                {
+                                    pressed = true;
+                                    key = PRESSED_BUTTONS[i][j];
+                                }
+                            }
+                        }
+                    }
+                    printf("Overriding %c\r\n", key);
+                    
+                    STATUS_BUFFER[ count_Key(key) - 1 ] = 0;
+                    INFO_BUFFER[ LENGTH ] = 0;
+                    ADDRESS_BUFFER[ LENGTH ] = 0;
+                    
+                    
+                    while( true ){
+                        
+                        printf("Capturing IR signal...\r\n");
+                   
+                    
+                        data_cur = 255;
+                        data_prev = 255;
+                        INPUT_SIGNAL_AQUIRED = 0;   //Make sure we only start storing values once we have a full pulse.
+                        IR_SIGNAL_BUFFER[0] = 1;
+
+                        noChangeCount = 0;
+                        while(noChangeCount < 20 && IR_SIGNAL_BUFFER[LENGTH] < (BLOCK_SIZE/2 - 1) ){
+
+                            data_cur = IR_RX_GetValue();
+                            //printf("data: %d\r\n", data_cur);
+                            if( data_prev == 255 ){ // We got our first sample
+                                data_prev = data_cur;
+                                continue;
+                            }
+
+                            if( data_prev != data_cur ){
+                                noChangeCount = 0;
+                                if( data_cur == IR_RX_LED_LOW  ){
+                                    PULSE_FALLING = TMR3_ReadTimer();
+                                    if( INPUT_SIGNAL_AQUIRED == true ){
+                                        IR_SIGNAL_BUFFER[IR_SIGNAL_BUFFER[LENGTH]] = pulse_Duration_In_Micro_Seconds(PULSE_RISING, PULSE_FALLING); //Add the captured pulse length to the command.
+                                        IR_SIGNAL_BUFFER[LENGTH]++;  //Increment elements
+                                    }else{
+                                        INPUT_SIGNAL_AQUIRED = true;
+                                    }
+                                }else{
+                                    PULSE_RISING = TMR3_ReadTimer();
+                                    if( INPUT_SIGNAL_AQUIRED == true ){
+                                        IR_SIGNAL_BUFFER[IR_SIGNAL_BUFFER[LENGTH]] = pulse_Duration_In_Micro_Seconds(PULSE_FALLING, PULSE_RISING); //Add the captured pulse length to the command.
+                                        IR_SIGNAL_BUFFER[LENGTH]++;  //Increment elements
+                                    }else{
+                                        INPUT_SIGNAL_AQUIRED = true;
+                                    }
+                                }
+                            }
+                            data_prev = data_cur;
+                        }
+
+                        //TODO: Save code to SD card in the correct place
+
+                        //TODO: Add something to request a 4 character pnumonic to associate with the code
+
+                        //TODO: Add logic to ask the user to put in additional codes
+
+                        printf("IR signal captured. Enter the name for the signal exactly 4 characters long:\r\n");
+                        
+                        uint8_t nameLength = 0;
+                        char letter;
+                        uint32_t name = 0;
+
+                        while( nameLength < 4 ){
+                            while(!EUSART1_DataReady);
+                            letter =  EUSART1_Read();
+                            printf("%c", letter);
+
+                            nameLength++;
+                            name = name | letter;
+                            if( nameLength != 4 ){ name = name << 8; }
+                        }
+                        
+                        uint32_t commandAddr = generate_Address( key, STATUS_BUFFER[ count_Key(key) - 1 ] );
+                        halfWordToByte( BUFFER, IR_SIGNAL_BUFFER );
+                        
+                        SDCARD_WriteBlock(commandAddr, BUFFER);
+                        while ((status = SDCARD_PollWriteComplete()) == WRITE_NOT_COMPLETE);
+                        
+                        printf("Writing IR_SIGNAL_BUFFER:\r\n");
+                        printf("    Address:    ");
+                        printf("%04x", commandAddr>>16); printf(":");  printf("%04x",commandAddr&0X0000FFFF);    printf("\r\n");
+                        printf("    Status:     %02x\r\n",status);
+                        
+                        printf("\r\n ------------- \r\n");
+                        
+                        NAME_BUFFER[ STATUS_BUFFER[ count_Key(key) - 1 ] ] = name;
+                        STATUS_BUFFER[ count_Key(key) - 1 ]++;
+                                
+                        printf("Command is saved. Continue capturing? Press (q) to quit\r\n");
+                        while(!EUSART1_DataReady);
+                        letter =  EUSART1_Read();
+                        if( letter == 'q' ){break;}
+                        // 1. We increment Status_Buffer at key's location
+                        // 2. Store new command at the new address
+                        // 3. Append to the list NAME_BUFFER (RAM) of "unique" commands (naming list)
+                        // 4. Check if we are done
+                        
+                        // 1. Print all unique names with numbers
+                        // 2. Ask the user to input the sequence which he wants to execute (Enter to skip)
+                        // 3. Get the value at the list of each index -> feed into generate address -> append to ADDRESS_BUFFER -> Increment ADDRESS_BUFFER[0]
+                        // 4. Append NAME_BUFFER[index] to the INFO_BUFFER -> Increment INFO_BUFFER[0]
+                    }
+                    for( uint8_t i = 0;  i < STATUS_BUFFER[ count_Key(key) - 1 ]; i++ ){
+                        char buf[5];
+                        uint32_t name_t = NAME_BUFFER[i];
+                        buf[0] = name_t >> 24;
+                        buf[1] = name_t >> 16;
+                        buf[2] = name_t >> 8;
+                        buf[3] = name_t;
+                        buf[4] = '\0';
+                        
+                        printf("Command: %d  Name: %s\r\n", i, buf);
+                    }
+                    
+                    printf("Enter a sequence of command numbers you would like to bind to the key press.\r\n");
+                    printf("Separate command numbers with space and end the sequence by pressing enter.\r\n");
+                    
+                    uint8_t finished = false;
+                    char charNumber;
+                    uint8_t number = 0;
+                    while( !finished ){
+                           while(!EUSART1_DataReady);
+                           charNumber =  EUSART1_Read();
+                           printf("%c", charNumber);
+
+                           if( charNumber == ' ' || charNumber == '\r' ){
+                               
+                               if( charNumber == '\r' ){finished = true;}
+                               
+                               if( number >= STATUS_BUFFER[ count_Key(key) - 1 ] ){ continue; }
+                               else{
+                                   INFO_BUFFER[ LENGTH ]++;
+                                   ADDRESS_BUFFER[ LENGTH ]++;
+                                   
+                                   INFO_BUFFER[ INFO_BUFFER[ LENGTH ] ] = NAME_BUFFER[ number ];
+                                   ADDRESS_BUFFER[ ADDRESS_BUFFER[ LENGTH ] ] = generate_Address( key, number );
+                                   number = 0;
+                               }
+                           }else{
+                               number = number * 10;
+                               number += (charNumber - 48);
+                           }
+                       }
+                    
+                    uint32_t keyAddress = ((count_Key( key ) * 2) - 1)* 512;
+                    
+                    wordToByte( BUFFER, INFO_BUFFER );
+                    SDCARD_WriteBlock(keyAddress, BUFFER);
+                    while ((status = SDCARD_PollWriteComplete()) == WRITE_NOT_COMPLETE);
+
+                    printf("Writing INFO_BUFFER:\r\n");
+                    printf("    Address:    ");
+                    printf("%04x", keyAddress>>16); printf(":");  printf("%04x",keyAddress&0X0000FFFF);    printf("\r\n");
+                    printf("    Status:     %02x\r\n",status);
+                    
+                    keyAddress = (count_Key( key ) * 2) * 512;
+                    wordToByte( BUFFER, ADDRESS_BUFFER );
+                    SDCARD_WriteBlock(keyAddress, BUFFER);
+                    while ((status = SDCARD_PollWriteComplete()) == WRITE_NOT_COMPLETE);
+
+                    printf("Writing ADDRESS_BUFFER:\r\n");
+                    printf("    Address:    ");
+                    printf("%04x", keyAddress>>16); printf(":");  printf("%04x",keyAddress&0X0000FFFF);    printf("\r\n");
+                    printf("    Status:     %02x\r\n",status);
+                    
+                    break;
+                 }
+                 
+                case '+':
+                    printf("LED ON\r\n");
+                   EPWM2_LoadDutyValue(LED_ON); 
+                   break;
+               
+               case '-':
+                   printf("LED OFF\r\n");
+                   EPWM2_LoadDutyValue(LED_OFF); 
+                   break;
+                 
+                case 'S':
+                {
+                    uint8_t nameLength = 0;
+                    char letter;
+                    uint32_t word = 0;
+                    
+                    while( nameLength < 4 ){
+                        while(!EUSART1_DataReady);
+                        letter =  EUSART1_Read();
+                        printf("%c", letter);
+                        
+                        nameLength++;
+                        word = word | letter;
+                        if( nameLength != 4 ){ word = word << 8; }
+                    }
+                    
+                    uint16_t a = (uint16_t)(word >> 16);
+                    uint16_t b = (uint16_t)((word << 16) >> 16);
+                    
+                    printf("%x%x ", a, b);
+                    printf("\r\n");
+                    
+                    break;
+                }     
+//                case 'S':
+//                {
+//                    uint32_t testBuffer[BLOCK_SIZE/4];
+//                    testBuffer[0] = 0x12345678;
+//                    testBuffer[1] = 0xABCDEFBB;
+//                    
+//                    uint32_t loadBuffer[BLOCK_SIZE/4];
+//                    
+//                    uint16_t testBuff[BLOCK_SIZE/2];
+//                    testBuff[0] = 0xDDCA;
+//                    testBuff[1] = 0x7941;
+//                    testBuff[2] = 0x2457;
+//                    testBuff[3] = 0x764E;
+//                    
+//                    uint16_t loadBuff[BLOCK_SIZE/2];
+//                    
+//                    uint8_t testBuf[BLOCK_SIZE];
+//                    testBuf[0] = 0x12;
+//                    testBuf[1] = 0x34;
+//                    testBuf[2] = 0x56;
+//                    testBuf[3] = 0x78;
+//                    testBuf[4] = 0xAB;
+//                    testBuf[5] = 0xCD;
+//                    testBuf[6] = 0xEF;
+//                    testBuf[7] = 0xBB;
+//                    uint8_t loadBuf[BLOCK_SIZE];
+//                    
+//                    wordToByte( loadBuf, testBuffer );
+//                    for(uint8_t i = 0; i < 8; i++){
+//                        printf("%x ", loadBuf[i]);
+//                    }
+//                    printf("\r\n");
+//                    
+//                    byteToWord( loadBuf, loadBuffer );
+//                    for(uint8_t i = 0; i < 2; i++){
+//                        uint16_t a = (uint16_t)(loadBuffer[i] >> 16);
+//                        uint16_t b = (uint16_t)((loadBuffer[i] << 16) >> 16);
+//                        printf("%x%x ", a, b);
+//                    }
+//                    printf("\r\n");
+//                    
+//                    halfWordToByte( loadBuf, testBuff );
+//                    for(uint8_t i = 0; i < 8; i++){
+//                        printf("%x ", loadBuf[i]);
+//                    }
+//                    printf("\r\n");
+//                    
+//                    byteToHalfWord( loadBuf, loadBuff );
+//                    for(uint8_t i = 0; i < 4; i++){
+//                        printf("%x ", loadBuff[i]);
+//                    }
+//                    printf("\r\n");
+//                    break;
+//                }
+                    
                 //--------------------------------------------
                 // If something unknown is hit, tell user
                 //--------------------------------------------
@@ -326,6 +672,91 @@ void main(void)
     }
 }
 
+
+//----------------------------------------------
+// Function to translate uint8 buffer to uint32
+// The first byte read would become the MSB
+//----------------------------------------------
+void byteToWord( uint8_t buffer[], uint32_t wordBuffer[] ){
+
+    uint16_t j = 0;
+    for(uint16_t i = 0; i < BLOCK_SIZE; i+=4){  
+        uint32_t temp = 0;
+        for(uint8_t k = 0; k < 4; k++){
+            temp = temp | buffer[i+k];
+            if(k != 3){
+                temp = temp << 8;
+            }
+        }
+        
+        wordBuffer[j] = temp;
+        j++;
+    }
+}
+
+
+//----------------------------------------------
+// Function to translate uint8 buffer to uint16
+// The first byte read would become the MSB
+//----------------------------------------------
+void byteToHalfWord( uint8_t buffer[], uint16_t halfWordBuffer[] ){
+
+    uint16_t j = 0;
+    for(uint16_t i = 0; i < BLOCK_SIZE; i+=2){  
+        uint16_t temp = 0;
+        for(uint8_t k = 0; k < 2; k++){
+            temp = temp | buffer[i+k];
+            if(k != 1){
+                temp = temp << 8;
+            }
+        }
+        
+        halfWordBuffer[j] = temp;
+        j++;
+    }
+}
+
+
+//----------------------------------------------
+// Function to translate uint32 buffer to uint8
+// The first byte read would become the MSB
+//----------------------------------------------
+void wordToByte( uint8_t buffer[], uint32_t wordBuffer[] ){
+
+    uint16_t j = 4;
+    for(uint16_t i = 0; i < BLOCK_SIZE/4; i++){  
+        uint32_t temp = wordBuffer[i];
+        for(uint8_t k = 0; k < 4; k++){
+            buffer[ (j-1)-k ] =(uint8_t) (temp & 0xFF);
+            if(k != 3){
+                temp = temp >> 8;
+            }
+        }
+        j+=4;
+    }
+}
+
+
+//----------------------------------------------
+// Function to translate uint16 buffer to uint8
+// The first byte read would become the MSB
+//----------------------------------------------
+void halfWordToByte( uint8_t buffer[], uint16_t halfWordBuffer[] ){
+
+    uint16_t j = 2;
+    for(uint16_t i = 0; i < BLOCK_SIZE/2; i++){  
+        uint16_t temp = halfWordBuffer[i];
+        for(uint8_t k = 0; k < 2; k++){
+            buffer[ (j-1)-k ] =(uint8_t) (temp & 0xFF);
+            if(k != 1){
+                temp = temp >> 8;
+            }
+        }
+        j+=2;
+    }
+}
+
+
 //----------------------------------------------
 // Function to transition the key to a number
 //----------------------------------------------
@@ -336,51 +767,51 @@ uint32_t count_Key(char key)
     switch(key)
     {
         case '*':
-            result = 1;
+            result = 12;
             break; 
             
         case '0':
-            result = 2;
+            result = 10;
             break;    
         
         case '#':
-            result = 3;
-            break; 
-            
-        case '7':
-            result = 4;
-            break; 
-        
-        case '8':
-            result = 5;
-            break; 
-            
-        case '9':
-            result = 6;
-            break; 
-        
-        case '4':
-            result = 7;
-            break; 
-            
-        case '5':
-            result = 8;
-            break; 
-            
-        case '6':
-            result = 9;
-            break; 
-            
-        case '1':
-            result = 10;
-            break; 
-            
-        case '2':
             result = 11;
             break; 
             
+        case '7':
+            result = 7;
+            break; 
+        
+        case '8':
+            result = 8;
+            break; 
+            
+        case '9':
+            result = 9;
+            break; 
+        
+        case '4':
+            result = 4;
+            break; 
+            
+        case '5':
+            result = 5;
+            break; 
+            
+        case '6':
+            result = 6;
+            break; 
+            
+        case '1':
+            result = 1;
+            break; 
+            
+        case '2':
+            result = 2;
+            break; 
+            
         case '3':
-            result = 12;
+            result = 3;
             break; 
              
     }
@@ -577,6 +1008,7 @@ void my_TMR1_ISR()
         
         if(index_signal < IR_SIGNAL_BUFFER[LENGTH])    //If we still have signal left to send, send it
         {
+            //printf("transmit\r\n");
             if(index_signal & 0x0001)   //If the index is odd, we know the signal should be high
             {
                 EPWM2_LoadDutyValue(LED_ON); 
@@ -588,13 +1020,16 @@ void my_TMR1_ISR()
   
             TMR1_WriteTimer(0x10000 - micro_Seconds_to_TMR1_Counts(IR_SIGNAL_BUFFER[index_signal]));   //Set the timer for the pulse duration.
         }
-        else if((index_address + 1) < ADDRESS_BUFFER[LENGTH]) //If we have more codes to send
+        else if(index_address < ADDRESS_BUFFER[LENGTH]) //If we have more codes to send
         {
             index_address++;
+            index_signal = 0;
+
             
             //TODO: find a way to delay the signal sending.
             
-            SDCARD_ReadBlock(ADDRESS_BUFFER[index_address], IR_SIGNAL_BUFFER); //Get the next code ready to send
+            SDCARD_ReadBlock(ADDRESS_BUFFER[index_address], BUFFER); //Get the next code ready to send
+            byteToHalfWord( BUFFER, IR_SIGNAL_BUFFER );
         }
         else    //else, stop sending
         {
@@ -628,7 +1063,7 @@ void my_TMR0_ISR()
         {
             if(escape_flag) break;
             
-            for(uint8_t j = 0;j < BUTTON_COLUMNS;j++)
+            for(uint8_t j = 0; j < BUTTON_COLUMNS; j++)
             {
                 if(escape_flag) break;
                 
@@ -636,10 +1071,12 @@ void my_TMR0_ISR()
                 {
                     escape_flag = 1; //We found a button press so stop looking.
                   
-                    SDCARD_ReadBlock(count_Key(TEST_BUTTONS[i][j])*BLOCK_SIZE*2, ADDRESS_BUFFER); //Get the list of addresses where the codes are stored
+                    SDCARD_ReadBlock(count_Key(TEST_BUTTONS[i][j])*BLOCK_SIZE*2, BUFFER); //Get the list of addresses where the codes are stored
+                    byteToWord( BUFFER, ADDRESS_BUFFER );
                     
-                    SDCARD_ReadBlock(ADDRESS_BUFFER[1], IR_SIGNAL_BUFFER);  // Get the first code ready to transmit.
                     
+                    SDCARD_ReadBlock(ADDRESS_BUFFER[1], BUFFER);  // Get the first code ready to transmit.
+                    byteToHalfWord( BUFFER, IR_SIGNAL_BUFFER );
                     TRANSMIT_SIGNAL = true;
                     
                     
